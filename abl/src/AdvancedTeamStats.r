@@ -20,109 +20,59 @@ substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
-GetCompetitions <- function(allStats) {
-  # 421: regular season, 627: playoffs
-  sql <- paste("select cmp_ID, min(wed_Datum) as StartDate,",
-               " count(*) as NrGameLines",
-               "from allStats",
-               "where cmp_ID=421 or cmp_ID=627",
-               "group by cmp_ID",
-               "order by min(wed_Datum)"
-  )
-
-  comps <- sqldf(sql)
-  
-  startYear <- as.numeric(substr(comps[1,"StartDate"],1,4))
-  comps <- transform(comps,
-                       Desc = paste("heren",paste(startYear,startYear+1,sep="-"),sep="_"))
-  
-  # should work too if there's only one competitions, hence the slicing
-  compDescriptions <- c("regseas","playoffs")[1:nrow(comps)] 
-  
-  comps$Desc <- paste(comps$Desc,compDescriptions,sep="_")
-  
-  return(comps)
+GetCompetitions <- function(season) {
+  return(-1)
 }
 
-CreateAdvancedStatsFiles <- function (fileName) {
-  sts <- read.csv2(fileName)
-  sts <- transform(sts, spl_ID = paste(plg_ID,  
-                                       spl_Voornaam, 
-                                       spl_tussen,
-                                       spl_Achternaam))
-  comps <- GetCompetitions(sts)
-  nrComps <- nrow(comps)
+CreateAdvancedStatsFiles <- function (inputDirectory) {
   
-  message(sprintf("Analyzing %i competition(s):", nrComps))
-  print(comps)
+  print(sprintf("processing %s ...", inputDirectory))
   
-  for(i in 1:nrComps) {
-    message(sprintf("Processing %s ... ", comps[i,"Desc"]))
-    compStats <- sts[which(sts$cmp_ID==comps[i,"cmp_ID"]),]
-    PrintCompetitionStatistics(compStats)
-    CreateAdvancedStatsFilesForCompetition(compStats, 
-                                           comps[i,"Desc"])
-  }
+  # read teams file
+  teams <- read.csv(sprintf("%s/01-teams.csv", inputDirectory))
+  games <- read.csv(sprintf("%s/04-games.csv", inputDirectory))
+  boxscores <- PrettyBoxScores(read.csv(sprintf("%s/05-boxscores-teams.csv", inputDirectory)), games, teams) 
+  
+  stop()
+  
+  # assuming a single competition
+  PrintCompetitionStatistics(games, teams, boxscores)
+
+  #
+  CreateAdvancedStatsFilesForCompetition(games, teams, boxscores)
 }
 
-PrintCompetitionStatistics <- function(sts) {
-  games <- sqldf("select wed_ID from sts group by wed_ID")
-  teams <- GetTeams(sts)
+PrintCompetitionStatistics <- function(games, teams, sts) {
   message(sprintf("Processing %i games by %i teams, with %i player stat lines",
                   nrow(games),nrow(teams),nrow(sts)))
   print(teams)
-  if(nrow(teams) < 8) {
-    warning("Only found ", nrow(teams), " teams - are you missing some teams?")
-  }
 }
 
-GetTeams <- function(sts) {
-  teamsThuis <- sqldf(paste("select plg_ID, thuis_club as plg_Name from sts",
-                            "where plg_ID = wed_ThuisPloeg",
-                            "group by plg_ID, thuis_club"))
-  
-  teamsUit <- sqldf(paste("select plg_ID, uit_club as plg_Name from sts",
-                            "where plg_ID = wed_UitPloeg",
-                            "group by plg_ID, uit_club"))
-  
-  teams <- rbind(teamsThuis,teamsUit)
-  teams <- sqldf(paste("select plg_ID, plg_Name from teams",
-                                       "group by plg_ID, plg_Name"))
-    
-  return(teams)
-}
+PrettyBoxScores <- function(plainBoxScore, games, teams) {
 
-CreateAdvancedStatsFilesForCompetition <- function (sts, compdesc) {
-    
-  ###############################
-  #
-  # Prepare teamStats data frame
-  #
-  ###############################
-  
-  advancedTeamsStatsOutputFile <- paste("./output/", compdesc, "_advanced_team_stats.csv", sep="")
-  advancedPlayerStatsOutputFile <- paste("./output/", compdesc, "_advanced_player_stats.csv", sep="")
-      
-  teamStats <- GetAdvancedTeamStats(sts) 
-  playerStats <- GetAdvancedPlayerStats(sts, teamStats)
-  
-  
-  message("Writing result file ", advancedTeamsStatsOutputFile)
-  write.csv2(teamStats, advancedTeamsStatsOutputFile)
-  
-  message("Writing result file ", advancedPlayerStatsOutputFile)
-  write.csv2(playerStats, advancedPlayerStatsOutputFile)
-  
-  return(c(advancedTeamsStatsOutputFile,advancedPlayerStatsOutputFile))
-}
+  boxscoreCopy <- plainBoxScore
 
-GetAdvancedTeamStats <- function(sts) {
-  psData <- data.frame(sts$wed_ID, sts$plg_ID, sts$wed_UitPloeg, sts$wed_ThuisPloeg, 
-                       sts$scu_FTA, sts$scu_FTM, sts$scu_FGA, sts$scu_FGM, sts$scu_3PM,  
-                       sts$scu_3PA, 
-                       sts$scu_OffRebounds, sts$scu_DefRebounds, sts$scu_TurnOvers,
-                       sts$scu_Minuten,
-                       sts$scu_Fouten, sts$scu_Assists, sts$scu_Steals, sts$scu_Blocks)
+  names(boxscoreCopy) <- sub("^t_s_ro", "OR", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_rd", "DR", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_to", "TO", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_pf", "PF", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_as", "Ast", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_st", "Stl", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_bl_fv", "Blk", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_1a", "FTA", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_1m", "FTM", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_2a", "FG2A", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_2m", "FG2M", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_3a", "FG3A", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_3m", "FG3M", names(boxscoreCopy))
+  
+  homeBoxscore <- boxscoreCopy[ , -grep("(^t_s|^s_)", names(boxscoreCopy)) ] # remove all columns starting with t_s or s_
+  
+  print(names(homeBoxscore))
+  print(names(boxscoreCopy))
+  print(names(plainBoxScore))
+  
+  return(0)
   
   # prettify
   names(psData) <- sub("^sts.", "", names(psData))        
@@ -136,9 +86,8 @@ GetAdvancedTeamStats <- function(sts) {
   names(psData) <- sub("Blocks", "Blk", names(psData))
   names(psData) <- sub("^FG", "FG2", names(psData))
   names(psData) <- sub("3P", "FG3", names(psData))
-    
-  teams <- GetTeams(sts)
-   
+  
+  
   sqlThuis <- paste("select wed_ID, plg_ID, wed_UitPloeg, wed_ThuisPloeg, ", 
                     "max(wed_TeamOffRebThuis) as [OR], ",
                     "max(wed_TeamDefRebThuis) as DR, ", 
@@ -159,10 +108,10 @@ GetAdvancedTeamStats <- function(sts) {
   
   # merge the data frames to obtain a frame we can aggregate on by wed_ID and plg_ID
   psData <- rbind(psData, stsThuis, stsUit)
-
+  
   # aggregate by game and team
   agg <- aggregate(psData[5:14] , by=list(wed_ID=psData$wed_ID, plg_ID=psData$plg_ID, wed_UitPloeg=psData$wed_UitPloeg, wed_ThuisPloeg=psData$wed_ThuisPloeg), FUN=sum)
-
+  
   # add team name
   agg <- sqldf("select agg.*, teams.plg_Name from agg inner join teams on agg.plg_ID=teams.plg_ID")
   
@@ -189,6 +138,26 @@ GetAdvancedTeamStats <- function(sts) {
   
   # sanity checks ...
   CheckMinutesPlayed(teamStats)
+}
+
+CreateAdvancedStatsFilesForCompetition <- function (games, teams, boxscores, compdesc = "2013-2014") {
+
+  advancedTeamsStatsOutputFile <- paste("./output/", compdesc, "_advanced_team_stats.csv", sep="")
+  advancedPlayerStatsOutputFile <- paste("./output/", compdesc, "_advanced_player_stats.csv", sep="")
+      
+  teamStats <- GetAdvancedTeamStats(games, teams, boxscores) 
+  # playerStats <- GetAdvancedPlayerStats(teamStats, compdesc)
+   
+  message("Writing result file ", advancedTeamsStatsOutputFile)
+  # write.csv2(teamStats, advancedTeamsStatsOutputFile)
+  
+  message("Writing result file ", advancedPlayerStatsOutputFile)
+  # write.csv2(playerStats, advancedPlayerStatsOutputFile)
+  
+  return(c(advancedTeamsStatsOutputFile,advancedPlayerStatsOutputFile))
+}
+
+GetAdvancedTeamStats <- function(games, teams, prettyBoxscores) {
 
   #######################################################################
   #
