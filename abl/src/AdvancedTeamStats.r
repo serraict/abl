@@ -201,6 +201,8 @@ GetAdvancedTeamStats <- function(games, teams, prettyBoxscores) {
                          FTpct = FTM / FTA
   )
   
+  teamStats <- teamStats[with(teamStats, order(game_id)), ]
+  
   return(teamStats)
 }
   
