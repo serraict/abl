@@ -36,7 +36,7 @@ pf_rv - fouls received         : -
 bl_fv - blocks in favor        : BLK
 bl_ag - blocks against         : -
 to - turnovers                 : TO
-st - steals                    : ST
+st - steals                    : Stl
 pts - points                   : pts
 eq - efficiency                : -
 plusminus - +/- statistics     : -
@@ -62,6 +62,9 @@ let WIN = pts_away>pts_home
 Note: duration of game an only be detemrined by summing player minutes; take this into account when calculating the pace.
 
 The team fram can be identical to the team fram used for the calculations for the DBL; so calculations can and be reused.
+
+
+### Player statistics
 
 
 

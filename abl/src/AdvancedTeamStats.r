@@ -55,7 +55,7 @@ PrettyBoxScores <- function(plainBoxScore, games, teams) {
   names(boxscoreCopy) <- sub("^t_s_ro", "OR", names(boxscoreCopy))
   names(boxscoreCopy) <- sub("^t_s_rd", "DR", names(boxscoreCopy))
   names(boxscoreCopy) <- sub("^t_s_to", "TO", names(boxscoreCopy))
-  names(boxscoreCopy) <- sub("^t_s_pf", "PF", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^t_s_pf_cm", "PF", names(boxscoreCopy))
   names(boxscoreCopy) <- sub("^t_s_as", "Ast", names(boxscoreCopy))
   names(boxscoreCopy) <- sub("^t_s_st", "Stl", names(boxscoreCopy))
   names(boxscoreCopy) <- sub("^t_s_bl_fv", "Blk", names(boxscoreCopy))
@@ -66,75 +66,29 @@ PrettyBoxScores <- function(plainBoxScore, games, teams) {
   names(boxscoreCopy) <- sub("^t_s_3a", "FG3A", names(boxscoreCopy))
   names(boxscoreCopy) <- sub("^t_s_3m", "FG3M", names(boxscoreCopy))
   
-  homeBoxscore <- boxscoreCopy[ , -grep("(^t_s|^s_)", names(boxscoreCopy)) ] # remove all columns starting with t_s or s_
+  # remove all columns starting with t_s or s_
+  boxscoreCopy <- boxscoreCopy[ , -grep("(^t_s|^s_)", names(boxscoreCopy)) ]
   
-  print(names(homeBoxscore))
+  homeBoxscore <- boxscoreCopy
+  names(homeBoxscore) <- sub("_b$", "_opp", names(homeBoxscore))
+  names(homeBoxscore) <- sub("_a$", "", names(homeBoxscore))
+  
+  awayBoxscore <- boxscoreCopy
+  names(awayBoxscore) <- sub("_a$", "_opp", names(awayBoxscore))  
+  names(awayBoxscore) <- sub("_b$", "", names(awayBoxscore))
+  
   print(names(boxscoreCopy))
-  print(names(plainBoxScore))
+  print(names(homeBoxscore))
+  print(names(awayBoxscore))
+  
+  # merge frames by name
+  
+  # move _opp to front of column name
+  #oppCols <- paste("opp", names(teamStats)[nrCols+1:nrCols], sep="_")
+  #names(teamStats)[nrCols+1:nrCols] <- oppCols
+  
   
   return(0)
-  
-  # prettify
-  names(psData) <- sub("^sts.", "", names(psData))        
-  names(psData) <- sub("scu_", "", names(psData))
-  names(psData) <- sub("OffRebounds", "OR", names(psData))
-  names(psData) <- sub("DefRebounds", "DR", names(psData))
-  names(psData) <- sub("TurnOvers", "TO", names(psData))
-  names(psData) <- sub("Fouten", "PF", names(psData))
-  names(psData) <- sub("Assists", "Ast", names(psData))
-  names(psData) <- sub("Steals", "Stl", names(psData))
-  names(psData) <- sub("Blocks", "Blk", names(psData))
-  names(psData) <- sub("^FG", "FG2", names(psData))
-  names(psData) <- sub("3P", "FG3", names(psData))
-  
-  
-  sqlThuis <- paste("select wed_ID, plg_ID, wed_UitPloeg, wed_ThuisPloeg, ", 
-                    "max(wed_TeamOffRebThuis) as [OR], ",
-                    "max(wed_TeamDefRebThuis) as DR, ", 
-                    "max(wed_TeamTurnOverThuis) as [TO] ",
-                    "from sts where plg_Id=wed_ThuisPloeg ",
-                    "group by wed_Id, plg_ID, wed_UitPloeg, wed_ThuisPloeg")
-  
-  stsThuis <- sqldf(sqlThuis)
-  
-  # add zeros for missing columns
-  missingCols <- setdiff(names(psData), names(stsThuis))  # get missing cols
-  stsThuis[missingCols] <- 0                              # add to stsThuis, fill with 0 
-  
-  sqlUit <- gsub("Thuis", "Uit", sqlThuis)
-  sqlUit <- gsub(", wed_UitPloeg, wed_UitPloeg,", ", wed_UitPloeg, wed_ThuisPloeg,", sqlThuis)  # bug fix :)
-  stsUit <- sqldf(sqlUit)
-  stsUit[missingCols] <- 0 
-  
-  # merge the data frames to obtain a frame we can aggregate on by wed_ID and plg_ID
-  psData <- rbind(psData, stsThuis, stsUit)
-  
-  # aggregate by game and team
-  agg <- aggregate(psData[5:14] , by=list(wed_ID=psData$wed_ID, plg_ID=psData$plg_ID, wed_UitPloeg=psData$wed_UitPloeg, wed_ThuisPloeg=psData$wed_ThuisPloeg), FUN=sum)
-  
-  # add team name
-  agg <- sqldf("select agg.*, teams.plg_Name from agg inner join teams on agg.plg_ID=teams.plg_ID")
-  
-  agg <- transform(agg, 
-                   plg_ShortName = substr(plg_Name,0,8))
-  
-  # now we join the tables, so that we have opposing numbers on the same game line
-  sqlGameLine = paste("select * from agg ",
-                      "inner join agg opp on ",
-                      "agg.wed_ID=opp.wed_ID and (",
-                      "(agg.plg_ID = agg.wed_ThuisPloeg and opp.plg_ID = opp.wed_UitPloeg) or ",
-                      "(agg.plg_ID = agg.wed_UitPloeg and opp.plg_ID = opp.wed_ThuisPloeg) ",
-                      ")",
-                      "",
-                      "order by wed_ID"
-  )
-  
-  teamStats <- sqldf(sqlGameLine) 
-  
-  # pretify columns; opponents columns are prefixed with "opp_"
-  nrCols <- dim(teamStats)[2]/2
-  oppCols <- paste("opp", names(teamStats)[nrCols+1:nrCols], sep="_")
-  names(teamStats)[nrCols+1:nrCols] <- oppCols
   
   # sanity checks ...
   CheckMinutesPlayed(teamStats)
