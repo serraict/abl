@@ -11,8 +11,11 @@ if(length(args) == 0) {
 }
 
 inputDirectory <- GetInputDirectory(season)
-CreateAdvancedStatsFiles(inputDirectory)
+files <- CreateAdvancedStatsFiles(inputDirectory)
+
+print(files)
 
 # read to check results:
-#regseasTeam <- read.csv2(sprintf("./output/%s_regseas_advanced_team_stats.csv", season))
+regseasTeam <- read.csv2(files[1])
 #regseasPlyr <- read.csv2(sprintf("./output/%s_regseas_advanced_player_stats.csv", season))
+View(regseasTeam)

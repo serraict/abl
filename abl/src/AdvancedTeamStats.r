@@ -33,25 +33,31 @@ CreateAdvancedStatsFiles <- function (inputDirectory) {
   games <- read.csv(sprintf("%s/04-games.csv", inputDirectory))
   boxscores <- PrettyBoxScores(read.csv(sprintf("%s/05-boxscores-teams.csv", inputDirectory)), games, teams) 
   
-  stop()
-  
   # assuming a single competition
   PrintCompetitionStatistics(games, teams, boxscores)
-
+  
   #
   CreateAdvancedStatsFilesForCompetition(games, teams, boxscores)
 }
 
 PrintCompetitionStatistics <- function(games, teams, sts) {
-  message(sprintf("Processing %i games by %i teams, with %i player stat lines",
+  message(sprintf("Processing %i games by %i teams, with %i game stat lines",
                   nrow(games),nrow(teams),nrow(sts)))
   print(teams)
 }
 
 PrettyBoxScores <- function(plainBoxScore, games, teams) {
+  
+  boxscoreCopy <- merge(plainBoxScore, games, by="game_id")
 
-  boxscoreCopy <- plainBoxScore
-
+  boxscoreCopy <- merge(teams, boxscoreCopy, by.y="team_a", by.x="team_id")  
+  names(boxscoreCopy) <- sub("^name$", "team_name_a", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^team_id$", "team_id_a", names(boxscoreCopy))
+  
+  boxscoreCopy <- merge(teams, boxscoreCopy, by.y="team_b", by.x="team_id")  
+  names(boxscoreCopy) <- sub("^name$", "team_name_b", names(boxscoreCopy))
+  names(boxscoreCopy) <- sub("^team_id$", "team_id_b", names(boxscoreCopy))
+  
   names(boxscoreCopy) <- sub("^t_s_ro", "OR", names(boxscoreCopy))
   names(boxscoreCopy) <- sub("^t_s_rd", "DR", names(boxscoreCopy))
   names(boxscoreCopy) <- sub("^t_s_to", "TO", names(boxscoreCopy))
@@ -70,28 +76,23 @@ PrettyBoxScores <- function(plainBoxScore, games, teams) {
   boxscoreCopy <- boxscoreCopy[ , -grep("(^t_s|^s_)", names(boxscoreCopy)) ]
   
   homeBoxscore <- boxscoreCopy
-  names(homeBoxscore) <- sub("_b$", "_opp", names(homeBoxscore))
-  names(homeBoxscore) <- sub("_a$", "", names(homeBoxscore))
+  oppSelector <- grep("_b$", names(homeBoxscore))
+  names(homeBoxscore)[oppSelector] <- paste("opp", names(homeBoxscore)[oppSelector], sep="_")
+  names(homeBoxscore) <- sub("(_a|_b)$", "", names(homeBoxscore))
+  homeBoxscore$home <- 1
   
   awayBoxscore <- boxscoreCopy
-  names(awayBoxscore) <- sub("_a$", "_opp", names(awayBoxscore))  
-  names(awayBoxscore) <- sub("_b$", "", names(awayBoxscore))
+  oppSelector <- grep("_a$", names(awayBoxscore))
+  names(awayBoxscore)[oppSelector] <- paste("opp", names(awayBoxscore)[oppSelector], sep="_")
+  names(awayBoxscore) <- sub("(_a|_b)$", "", names(awayBoxscore))
+  awayBoxscore$home <- 0
   
-  print(names(boxscoreCopy))
-  print(names(homeBoxscore))
-  print(names(awayBoxscore))
-  
-  # merge frames by name
-  
-  # move _opp to front of column name
-  #oppCols <- paste("opp", names(teamStats)[nrCols+1:nrCols], sep="_")
-  #names(teamStats)[nrCols+1:nrCols] <- oppCols
-  
-  
-  return(0)
+  combinedboxScore <- rbind(homeBoxscore, awayBoxscore)
+
+  return(combinedboxScore)
   
   # sanity checks ...
-  CheckMinutesPlayed(teamStats)
+  # CheckMinutesPlayed(teamStats)
 }
 
 CreateAdvancedStatsFilesForCompetition <- function (games, teams, boxscores, compdesc = "2013-2014") {
@@ -103,7 +104,7 @@ CreateAdvancedStatsFilesForCompetition <- function (games, teams, boxscores, com
   # playerStats <- GetAdvancedPlayerStats(teamStats, compdesc)
    
   message("Writing result file ", advancedTeamsStatsOutputFile)
-  # write.csv2(teamStats, advancedTeamsStatsOutputFile)
+  write.csv2(teamStats, advancedTeamsStatsOutputFile)
   
   message("Writing result file ", advancedPlayerStatsOutputFile)
   # write.csv2(playerStats, advancedPlayerStatsOutputFile)
@@ -118,6 +119,8 @@ GetAdvancedTeamStats <- function(games, teams, prettyBoxscores) {
   # Calculate performance indicators and add them to the teamStats frame
   #
   #######################################################################
+  
+  teamStats <- prettyBoxscores
   
   # ft ftrips
   teamStats <- transform(teamStats,
@@ -150,17 +153,19 @@ GetAdvancedTeamStats <- function(games, teams, prettyBoxscores) {
   )
   
   # check posessions, pace and indicate if the number of possessions is suspicious
-  teamStats <- transform(teamStats,
-                         avgps = round((ps + opp_ps) / 2),
-                         WARNING = abs(ps-opp_ps) > 4.0,
-                         pace = (400/(Minuten+opp_Minuten)) * ((ps + opp_ps) / 2))
+  teamStats <- transform(teamStats
+                        ,avgps = round((ps + opp_ps) / 2)
+                        ,largePossessionDiff = abs(ps-opp_ps) > 4.0
+                        #,pace = (400/(Minuten+opp_Minuten)) * ((ps + opp_ps) / 2)
+                        )
+  
   
   # offensive and defensive ratings
   # we use the average posessions, because we think that's the best estimate of the actual number of posessions
-  teamStats <- transform(teamStats,
-                         Ortg = 100 * pts / avgps,
-                         Drtg = 100 * opp_pts / avgps,
-                         Home =  plg_ID == wed_ThuisPloeg)
+  teamStats <- transform(teamStats
+                         ,Ortg = 100 * pts / avgps
+                         ,Drtg = 100 * opp_pts / avgps
+                         )
   
   # net rating
   teamStats <- transform(teamStats,
@@ -194,20 +199,6 @@ GetAdvancedTeamStats <- function(games, teams, prettyBoxscores) {
                          FG3pct = FG3M/ FG3A,
                          FTpct = FTM / FTA
   )
-  
-  # # point by category
-  # teamStats <- transform(teamStats,
-  #                      FG2pts = FG2M*2,
-  #                      FG3pts = FG3M*3,
-  #                      FTpts = FTM
-  #                      )
-  # 
-  # # point contributions
-  # teamStats <- transform(teamStats,
-  #                      ContrFG2pts = FG2pts/pts,
-  #                      ContrFG3pts = FG3pts/pts,
-  #                      ContrFTpts = FTpts/pts
-  #                      )
   
   return(teamStats)
 }
