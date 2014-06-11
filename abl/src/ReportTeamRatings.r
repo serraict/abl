@@ -16,7 +16,7 @@ PageWithTrendAndBoxPlot <- function (df, title, medianForComp, yLim) {
   message(sprintf("PageWithTrendAndBoxPlot '%s'... ", title))
   
   p <- ggplot(df, aes(x=game, y=value)) +
-    opts(title=title)  +
+    labs(title=title)  +
     geom_hline(yintercept=medianForComp, linetype="dotted") +
     ylim(yLim)
   
@@ -43,8 +43,8 @@ PageWithTrendAndBoxPlot <- function (df, title, medianForComp, yLim) {
 ######################################################################
 
 OrtgByTeamPlot <- function (teamStats) {
-  plt <- ggplot(teamStats, aes(plg_Name, Ortg)) + 
-    geom_boxplot(aes(fill=plg_Name)) +
+  plt <- ggplot(teamStats, aes(team_name, Ortg)) + 
+    geom_boxplot(aes(fill=team_name)) +
     geom_hline(aes(yintercept=median(Ortg)), linetype="dotted") +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +    
     labs(title ="Offensive Rating") +
@@ -54,8 +54,8 @@ OrtgByTeamPlot <- function (teamStats) {
 }   
 
 drtgByTeamPlot <- function(teamStats) {
-  return(ggplot(teamStats, aes(plg_Name, Drtg)) + 
-           geom_boxplot(aes(fill=plg_Name)) +
+  return(ggplot(teamStats, aes(team_name, Drtg)) + 
+           geom_boxplot(aes(fill=team_name)) +
            geom_hline(aes(yintercept=median(Drtg)), linetype="dotted") +
            theme(axis.text.x = element_text(angle = -45, hjust = 0)) +    
            labs(title ="Defensive Rating by Team") +
@@ -64,8 +64,8 @@ drtgByTeamPlot <- function(teamStats) {
 }
 
 nrtgByTeamPlot <- function(teamStats) {
-  return( ggplot(teamStats, aes(plg_Name, Nrtg)) + 
-            geom_boxplot(aes(fill=plg_Name)) +
+  return( ggplot(teamStats, aes(team_name, Nrtg)) + 
+            geom_boxplot(aes(fill=team_name)) +
             geom_hline(aes(yintercept=median(Nrtg)), linetype="dotted") +
             theme(axis.text.x = element_text(angle = -45, hjust = 0)) +    
             labs(title ="Net Rating by Team") +
@@ -89,9 +89,9 @@ fourFactorsDf <- function(teamStats) {
 fourFactorsForCompetition <- function(teamStats) {
   d <- fourFactorsDf(teamStats)
   
-  forPlot <- teamStats[c("wed_ID","Nrtg","EFGpct","ORpct","TOpct","FT4f",
-                         "plg_Name","Home")] 
-  forPlot.m <- melt(forPlot, id=c("wed_ID", "plg_Name", "Home","Nrtg"))
+  forPlot <- teamStats[c("game_id","Nrtg","EFGpct","ORpct","TOpct","FT4f",
+                         "team_name","Home")] 
+  forPlot.m <- melt(forPlot, id=c("game_id", "team_name", "Home","Nrtg"))
   
   p <- ggplot(forPlot.m, aes(value, Nrtg)) +
     geom_point(alpha=0.4) + 
@@ -117,7 +117,7 @@ plotfourFactorsForCompetitionCorrelationMatrix <- function(teamStats) {
 
 TeamRatingQuadrantPlot <- function (teamStats) {
   
-  agg <- aggregate(cbind(Ortg, Drtg, Nrtg) ~ plg_Name,
+  agg <- aggregate(cbind(Ortg, Drtg, Nrtg) ~ team_name,
                    dat = teamStats, 
                    FUN = mean)
   
@@ -126,7 +126,7 @@ TeamRatingQuadrantPlot <- function (teamStats) {
   x1 <- moff+20
   
   plt <- ggplot(agg, aes(x=Ortg, y=Drtg)) + 
-    geom_point(aes(colour = factor(plg_Name), size = Nrtg)) +
+    geom_point(aes(colour = factor(team_name), size = Nrtg)) +
     geom_abline(intercept = 0, slope = 1, linetype="dotted") +   
     geom_hline(yintercept = moff, linetype="dotted") +   
     geom_text(data = NULL, x = x0+2, y = moff, size=3, label = "league avg") + 
@@ -134,7 +134,7 @@ TeamRatingQuadrantPlot <- function (teamStats) {
     geom_text(data = NULL, x = moff, y = x1, size=3, label = "league avg") + 
     coord_fixed() +
     labs(title ="Team Ratings") +
-    geom_text(aes(label=plg_Name), vjust=2, size=3, alpha = I(0.6)) +
+    geom_text(aes(label=team_name), vjust=2, size=3, alpha = I(0.6)) +
     xlab("Ortg (Points per 100 possessions)") + 
     ylab("Drtg (Points allowed per 100 possessions)") +
     xlim(x0,x1) + 
@@ -143,8 +143,8 @@ TeamRatingQuadrantPlot <- function (teamStats) {
 }   
 
 ptsDiffByTeamPlot <- function (teamStats) {
-  return(ggplot(teamStats, aes(plg_Name, (pts-opp_pts))) + 
-           geom_boxplot(aes(fill=plg_Name)) +
+  return(ggplot(teamStats, aes(team_name, (pts-opp_pts))) + 
+           geom_boxplot(aes(fill=team_name)) +
            theme(axis.text.x = element_text(angle = -45, hjust = 0)) +            
            geom_hline(aes(yintercept=0), linetype="dotted") +
            geom_hline(aes(yintercept=-6), linetype="dotted") +
@@ -170,7 +170,7 @@ toPctPlot <- function(teamStats, opponent=FALSE) {
 
 fttPctPlot <- function(teamStats, opponent=FALSE) {
   return(allTeamsBoxPlot(teamStats, "FT4f", opponent) + 
-           geom_boxplot(aes(fill=plg_Name)) +
+           geom_boxplot(aes(fill=team_name)) +
            geom_hline(aes(yintercept=median(FT4f)), linetype="dotted") +
            labs(title ="Free throws made per field goal attempt") +
            ylab(""))
@@ -192,9 +192,9 @@ efgPctPlot <- function(teamStats, opponent=FALSE) {
 
 allTeamsBoxPlot <- function(teamStats, field, opponent=FALSE) {
   if(opponent) { field <- paste("opp_", field, sep="") }
-  aest <- aes_string(x = "plg_Name", y = field)
+  aest <- aes_string(x = "team_name", y = field)
   return(ggplot(teamStats, aest) + 
-           geom_boxplot(aes(fill=plg_Name)) +
+           geom_boxplot(aes(fill=team_name)) +
            theme(legend.position="none") +
            theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
            xlab("")
@@ -224,12 +224,12 @@ shotSelectionFTT <- function(teamStats, opponent=FALSE) {
 
 shotSelectionHistory <- function(teamStats) {
   
-  dfm <- melt(teamStats,measure.vars=c('FG2Apct','FG3Apct', 'FTTpct'),id.vars = c('wed_ID', 'plg_Name', 'opp_plg_Name'))
+  dfm <- melt(teamStats,measure.vars=c('FG2Apct','FG3Apct', 'FTTpct'),id.vars = c('game_id', 'team_name', 'opp_team_name'))
   
-  return(ggplot(dfm, aes(x=factor(wed_ID), y=value, fill=variable)) +
+  return(ggplot(dfm, aes(x=factor(game_id), y=value, fill=variable)) +
            geom_bar(stat="identity", color='black') +
            theme(axis.text.x = element_blank()) +
-           facet_wrap(~ plg_Name, scales = "free_x", ncol=2) 
+           facet_wrap(~ team_name, scales = "free_x", ncol=2) 
          
   )
   
@@ -243,14 +243,13 @@ shotSelectionHistory <- function(teamStats) {
 PrintTeamRatings <- function(teamStats, outputFile) {
   message("Creating team rating output file ...")
   
-  teams <- sqldf(paste("select plg_ID, plg_Name, plg_ShortName from teamStats",
-                       "group by plg_ID, plg_Name, plg_ShortName"))
+  teams <- sqldf(paste("select team_id, team_name from teamStats",
+                       "group by team_id, team_name"))
   nrTeams <- nrow(teams)
-  
   message(sprintf("Found %i teams in the team rating data set ...",nrow(teams)))
   print(teams)
   
-  pdf(outputFile, paper="a4r", width=12)
+  #pdf(outputFile, paper="a4r", width=12)
   
   # Offensive and Defensive Ratings - Competition
   print(OrtgByTeamPlot(teamStats))
@@ -259,18 +258,20 @@ PrintTeamRatings <- function(teamStats, outputFile) {
 
   print(nrtgByTeamPlot(teamStats))
   
-  ptsByTeamPlot <- ggplot(teamStats, aes(plg_ShortName, pts)) + 
-    geom_boxplot(aes(fill=plg_ShortName)) +
+  ptsByTeamPlot <- ggplot(teamStats, aes(team_name, pts)) + 
+    geom_boxplot(aes(fill=team_name)) +
     geom_hline(aes(yintercept=median(pts)), linetype="dotted") +
-    opts(title ="Points") +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +    
+    labs(title ="Points") +
     xlab("") + 
     ylab("Points")    
   print(ptsByTeamPlot)
   
-  ptsAllowedByTeamPlot <- ggplot(teamStats, aes(plg_ShortName, opp_pts)) + 
-    geom_boxplot(aes(fill=plg_ShortName)) +
+  ptsAllowedByTeamPlot <- ggplot(teamStats, aes(team_name, opp_pts)) + 
+    geom_boxplot(aes(fill=team_name)) +
     geom_hline(aes(yintercept=median(opp_pts)), linetype="dotted") +
-    opts(title ="Points Allowed") +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +    
+    labs(title ="Points Allowed") +
     xlab("") + 
     ylab("Points")    
   print(ptsAllowedByTeamPlot)
@@ -289,157 +290,155 @@ PrintTeamRatings <- function(teamStats, outputFile) {
 
   print(fttPctPlot(fttPctPlot(teamStats)))
     
-  
-  
-  message("Offensive and Defensive Ratings - by team ...")
-  
-  medianRatingCompetion <- median(teamStats$Ortg)
-  yLim <- c(60, 170)
-  
-  for(i in 1:nrTeams){
-    plgID <- teams[i,1]
-    plgName <- teams[i,2]
-    message(sprintf("processing %s (%i of %i) ...",plgName,i,nrTeams))
-    forPlot <- teamStats[which(teamStats$plg_ID==plgID),]
-
-    forPlot <- forPlot[c("Drtg","Ortg","opp_plg_ShortName","Home")] 
-    forPlot$game = c(1:length(forPlot$Ortg))
-    forPlot <- rename.vars(forPlot, c("opp_plg_ShortName"), c("opponent"))
-    
-    forPlot.m <- melt(forPlot, id=c("game", "opponent", "Home"))
-      
-    PageWithTrendAndBoxPlot(forPlot.m, plgName, medianRatingCompetion, yLim)
-    
-    message(sprintf("processed %s (%i of %i)",plgName,i,nrTeams))
-  }  
-  
-  message("battle of ratio's per team ...")
-  
+#   message("Offensive and Defensive Ratings - by team ...")
+#   
+#   medianRatingCompetion <- median(teamStats$Ortg)
+#   yLim <- c(60, 170)
+#   
 #   for(i in 1:nrTeams){
 #     plgID <- teams[i,1]
 #     plgName <- teams[i,2]
-#     forPlot <- teamStats[which(teamStats$plg_ID==plgID),]
-#     d = data.frame(forPlot$Nrtg, forPlot$Ortg, forPlot$Drtg,
-#                    forPlot$EFGpct, forPlot$ORpct, 
-#                    forPlot$TOpct, forPlot$FTTpct,
-#                    forPlot$opp_EFGpct, forPlot$opp_ORpct, 
-#                    forPlot$opp_TOpct, forPlot$opp_FTTpct
-#                    )
-#     names(d) <- sub("^forPlot.", "", names(d))
-#     corTeam = cor(d)
+#     message(sprintf("processing %s (%i of %i) ...",plgName,i,nrTeams))
+#     forPlot <- teamStats[which(teamStats$team_id==plgID),]
+# 
+#     forPlot <- forPlot[c("Drtg","Ortg","opp_team_name","Home")] 
+#     forPlot$game = c(1:length(forPlot$Ortg))
+#     forPlot <- rename.vars(forPlot, c("opp_team_name"), c("opponent"))
 #     
-#     p <- levelplot(corTeam, main=paste("Performance correlation matrix for ",plgName), 
-#                    panel=function(...) {
-#                     arg <- list(...)
-#                     panel.levelplot(...)
-#                     panel.text(arg$x, arg$y, round(arg$z,2))})
+#     forPlot.m <- melt(forPlot, id=c("game", "opponent", "Home"))
+#       
+#     #PageWithTrendAndBoxPlot(forPlot.m, plgName, medianRatingCompetion, yLim)
 #     
-#     print(p)
+#     message(sprintf("processed %s (%i of %i)",plgName,i,nrTeams))
+#   }  
+#   
+#   message("battle of ratio's per team ...")
+#   
+# #   for(i in 1:nrTeams){
+# #     plgID <- teams[i,1]
+# #     plgName <- teams[i,2]
+# #     forPlot <- teamStats[which(teamStats$team_id==plgID),]
+# #     d = data.frame(forPlot$Nrtg, forPlot$Ortg, forPlot$Drtg,
+# #                    forPlot$EFGpct, forPlot$ORpct, 
+# #                    forPlot$TOpct, forPlot$FTTpct,
+# #                    forPlot$opp_EFGpct, forPlot$opp_ORpct, 
+# #                    forPlot$opp_TOpct, forPlot$opp_FTTpct
+# #                    )
+# #     names(d) <- sub("^forPlot.", "", names(d))
+# #     corTeam = cor(d)
+# #     
+# #     p <- levelplot(corTeam, main=paste("Performance correlation matrix for ",plgName), 
+# #                    panel=function(...) {
+# #                     arg <- list(...)
+# #                     panel.levelplot(...)
+# #                     panel.text(arg$x, arg$y, round(arg$z,2))})
+# #     
+# #     print(p)
+# #   }
+#   
+#   message("Ratio Details by team ...")
+#   
+#   yLim <- c(0, 0.8)
+#   
+#   for(i in 1:nrTeams){
+#     plgID <- teams[i,1]
+#     plgName <- teams[i,2]
+#     forPlot <- teamStats[which(teamStats$team_id==plgID),]
+#       
+#     forPlot <- forPlot[c("opp_team_name","Home",
+#                          "EFGpct","ORpct","TOpct","FTTpct",
+#                          "opp_EFGpct","opp_ORpct","opp_TOpct","opp_FTTpct")] 
+#     forPlot$game = c(1:length(forPlot$EFGpct))
+#     forPlot <- rename.vars(forPlot, c("opp_team_name"), c("opponent"))
+#     
+#     PageWithTrendAndBoxPlot(melt(forPlot, measure=c("EFGpct", "opp_EFGpct")), 
+#                             plgName, median(teamStats$EFGpct), yLim)
+#     PageWithTrendAndBoxPlot(melt(forPlot, measure=c("ORpct", "opp_ORpct")), 
+#                             plgName, median(teamStats$ORpct), yLim)
+#     PageWithTrendAndBoxPlot(melt(forPlot, measure=c("TOpct", "opp_TOpct")), 
+#                             plgName, median(teamStats$TOpct), yLim)
+#     PageWithTrendAndBoxPlot(melt(forPlot, measure=c("FTTpct", "opp_FTTpct")), 
+#                             plgName, median(teamStats$FTTpct), yLim)
+#   
+#   #   forCor <- data.frame(forPlot$Nrtg, forPlot$EFGpct,
+#   #                        forPlot$ORpct, forPlot$TOpct, 
+#   #                        forPlot$FTTpct)
+#   #   forCorOpp <- data.frame(forPlot$Nrtg, forPlot$opp_EFGpct,
+#   #                           forPlot$opp_ORpct, forPlot$opp_TOpct, 
+#   #                           forPlot$opp_FTTpct)
+#     
+#   }
+#   
+#   message("Shooting plays (2/3/FT) ...")
+#   
+#   layout(matrix(c(1,2,3,4,5,2,3,4), 2, 4, byrow=TRUE), widths=c(5,1,1,1))
+#   
+#   yLim <- c(0, 60)
+#   
+#   for(i in 1:nrTeams){
+#     plgID <- teams[i,1]
+#     plgName <- teams[i,2]
+#     forPlot <- teamStats[which(teamStats$team_id==plgID),]
+#     gameNrs <- c(1:nrow(forPlot))
+#     
+#     # absolute
+#     plot(gameNrs, forPlot$FG2A, 
+#          type="o", pch=1, lty=1, col="blue", 
+#          xlab=plgName, ylab="#Shots",
+#          ylim=yLim)
+#     lines(gameNrs, forPlot$FG3A, 
+#           type="o", pch=1, lty=1, col="purple", 
+#           xlab=plgName, 
+#           ylim=yLim)
+#     lines(gameNrs, forPlot$FTtrip, 
+#           type="o", pch=1, lty=1, col="red", 
+#           xlab=plgName, 
+#           ylim=yLim)
+#     
+#     abline(h=mean(forPlot$FG2A), lty=3, col="blue")
+#     abline(h=mean(forPlot$FG3A), lty=3, col="purple")
+#     abline(h=mean(forPlot$FTtrip), lty=3, col="red")
+#     
+#     boxplot((forPlot$FG2Apct), data=forPlot, 
+#             xlab="FG2A", col="blue", 
+#             ylim=c(0.0, 1.0) )
+#     abline(h=median(teamStats$FG2Apct), lty=3)
+#     
+#     boxplot(forPlot$FG3Apct, data=forPlot, 
+#             xlab="3FGA", col="purple",
+#             ylim=c(0.0, 1.0) )
+#     abline(h=median(teamStats$FG3Apct), lty=3)
+#     
+#     boxplot(forPlot$FTTpct, data=forPlot, 
+#             xlab="FT trips", col="red",
+#             ylim=c(0.0, 1.0) )
+#     abline(h=median(teamStats$FTTpct), lty=3)
+#     
+#     # relative
+#     plot(gameNrs, forPlot$FG2Apct, 
+#          type="o", pch=1, lty=1, col="blue", 
+#          xlab=plgName, ylab="Shot Selection Ratio",
+#          ylim=c(0.0, 1.0))
+#     lines(gameNrs, forPlot$FG3Apct, 
+#           type="o", pch=1, lty=1, col="purple", 
+#           xlab=plgName, 
+#           ylim=c(0.0, 1.0))
+#     lines(gameNrs, forPlot$FTTpct, 
+#           type="o", pch=1, lty=1, col="red", 
+#           xlab=plgName, 
+#           ylim=c(0.0, 1.0))
+#     
+#   #   # create a bar plot using ggplot   
+#   #   fields <- c("FGA", "FG3A", "FTtrips", "TO")
+#   #   plays <- forPlot[fields]
+#   #   plays["gameNrs"] <- gameNrs
+#   #   meltedPlays <- melt(plays, id=c('gameNrs'))
+#   #   qplot(factor(gameNrs), data=meltedPlays, 
+#   #         geom="bar", fill=variable, weight=value)
+#     
 #   }
   
-  message("Ratio Details by team ...")
-  
-  yLim <- c(0, 0.8)
-  
-  for(i in 1:nrTeams){
-    plgID <- teams[i,1]
-    plgName <- teams[i,2]
-    forPlot <- teamStats[which(teamStats$plg_ID==plgID),]
-      
-    forPlot <- forPlot[c("opp_plg_ShortName","Home",
-                         "EFGpct","ORpct","TOpct","FTTpct",
-                         "opp_EFGpct","opp_ORpct","opp_TOpct","opp_FTTpct")] 
-    forPlot$game = c(1:length(forPlot$EFGpct))
-    forPlot <- rename.vars(forPlot, c("opp_plg_ShortName"), c("opponent"))
-    
-    PageWithTrendAndBoxPlot(melt(forPlot, measure=c("EFGpct", "opp_EFGpct")), 
-                            plgName, median(teamStats$EFGpct), yLim)
-    PageWithTrendAndBoxPlot(melt(forPlot, measure=c("ORpct", "opp_ORpct")), 
-                            plgName, median(teamStats$ORpct), yLim)
-    PageWithTrendAndBoxPlot(melt(forPlot, measure=c("TOpct", "opp_TOpct")), 
-                            plgName, median(teamStats$TOpct), yLim)
-    PageWithTrendAndBoxPlot(melt(forPlot, measure=c("FTTpct", "opp_FTTpct")), 
-                            plgName, median(teamStats$FTTpct), yLim)
-  
-  #   forCor <- data.frame(forPlot$Nrtg, forPlot$EFGpct,
-  #                        forPlot$ORpct, forPlot$TOpct, 
-  #                        forPlot$FTTpct)
-  #   forCorOpp <- data.frame(forPlot$Nrtg, forPlot$opp_EFGpct,
-  #                           forPlot$opp_ORpct, forPlot$opp_TOpct, 
-  #                           forPlot$opp_FTTpct)
-    
-  }
-  
-  message("Shooting plays (2/3/FT) ...")
-  
-  layout(matrix(c(1,2,3,4,5,2,3,4), 2, 4, byrow=TRUE), widths=c(5,1,1,1))
-  
-  yLim <- c(0, 60)
-  
-  for(i in 1:nrTeams){
-    plgID <- teams[i,1]
-    plgName <- teams[i,2]
-    forPlot <- teamStats[which(teamStats$plg_ID==plgID),]
-    gameNrs <- c(1:nrow(forPlot))
-    
-    # absolute
-    plot(gameNrs, forPlot$FG2A, 
-         type="o", pch=1, lty=1, col="blue", 
-         xlab=plgName, ylab="#Shots",
-         ylim=yLim)
-    lines(gameNrs, forPlot$FG3A, 
-          type="o", pch=1, lty=1, col="purple", 
-          xlab=plgName, 
-          ylim=yLim)
-    lines(gameNrs, forPlot$FTtrip, 
-          type="o", pch=1, lty=1, col="red", 
-          xlab=plgName, 
-          ylim=yLim)
-    
-    abline(h=mean(forPlot$FG2A), lty=3, col="blue")
-    abline(h=mean(forPlot$FG3A), lty=3, col="purple")
-    abline(h=mean(forPlot$FTtrip), lty=3, col="red")
-    
-    boxplot((forPlot$FG2Apct), data=forPlot, 
-            xlab="FG2A", col="blue", 
-            ylim=c(0.0, 1.0) )
-    abline(h=median(teamStats$FG2Apct), lty=3)
-    
-    boxplot(forPlot$FG3Apct, data=forPlot, 
-            xlab="3FGA", col="purple",
-            ylim=c(0.0, 1.0) )
-    abline(h=median(teamStats$FG3Apct), lty=3)
-    
-    boxplot(forPlot$FTTpct, data=forPlot, 
-            xlab="FT trips", col="red",
-            ylim=c(0.0, 1.0) )
-    abline(h=median(teamStats$FTTpct), lty=3)
-    
-    # relative
-    plot(gameNrs, forPlot$FG2Apct, 
-         type="o", pch=1, lty=1, col="blue", 
-         xlab=plgName, ylab="Shot Selection Ratio",
-         ylim=c(0.0, 1.0))
-    lines(gameNrs, forPlot$FG3Apct, 
-          type="o", pch=1, lty=1, col="purple", 
-          xlab=plgName, 
-          ylim=c(0.0, 1.0))
-    lines(gameNrs, forPlot$FTTpct, 
-          type="o", pch=1, lty=1, col="red", 
-          xlab=plgName, 
-          ylim=c(0.0, 1.0))
-    
-  #   # create a bar plot using ggplot   
-  #   fields <- c("FGA", "FG3A", "FTtrips", "TO")
-  #   plays <- forPlot[fields]
-  #   plays["gameNrs"] <- gameNrs
-  #   meltedPlays <- melt(plays, id=c('gameNrs'))
-  #   qplot(factor(gameNrs), data=meltedPlays, 
-  #         geom="bar", fill=variable, weight=value)
-    
-  }
-  
-  dev.off()
+  #dev.off()
   
   
   
@@ -456,7 +455,7 @@ PrintTeamRatings <- function(teamStats, outputFile) {
   for(i in 1:nrTeams){
     plgID <- teams[i,1]
     plgName <- teams[i,2]
-    forPlot <- teamStats[which(teamStats$plg_ID==plgID),]
+    forPlot <- teamStats[which(teamStats$team_id==plgID),]
     gameNrs = c(1:nrow(forPlot))
     
     row <- sprintf("%-30s %5.1f %5.1f %5.1f %5.1f %5.1f \n", 

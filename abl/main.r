@@ -18,4 +18,7 @@ print(files)
 # read to check results:
 regseasTeam <- read.csv2(files[1])
 #regseasPlyr <- read.csv2(sprintf("./output/%s_regseas_advanced_player_stats.csv", season))
-View(regseasTeam)
+
+#View(regseasTeam)
+
+PrintTeamRatings(regseasTeam, sprintf("./output/%s_report.pdf", season))

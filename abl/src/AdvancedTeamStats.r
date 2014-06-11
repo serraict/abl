@@ -153,10 +153,11 @@ GetAdvancedTeamStats <- function(games, teams, prettyBoxscores) {
   )
   
   # check posessions, pace and indicate if the number of possessions is suspicious
+  warning("pace is not yet normalized to 40 minutes, so overtime games are not yet properly accounted for")
   teamStats <- transform(teamStats
                         ,avgps = round((ps + opp_ps) / 2)
                         ,largePossessionDiff = abs(ps-opp_ps) > 4.0
-                        #,pace = (400/(Minuten+opp_Minuten)) * ((ps + opp_ps) / 2)
+                        ,pace = (400/400) * ((ps + opp_ps) / 2)
                         )
   
   
