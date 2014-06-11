@@ -80,7 +80,7 @@ fourFactorsDf <- function(teamStats) {
                  # when evaluating the competion, 
                  # it does not make sense to include opponent stats
                  #teamStats$opp_EFGpct, teamStats$opp_ORpct, 
-                 #teamStats$opp_TOpct, teamStats$opp_FTTpct
+                 #teamStats$opp_TOpct, teamStats$opp_FT4f
   )
   names(d) <- sub("^teamStats.", "", names(d))
   return(d)
@@ -90,8 +90,8 @@ fourFactorsForCompetition <- function(teamStats) {
   d <- fourFactorsDf(teamStats)
   
   forPlot <- teamStats[c("game_id","Nrtg","EFGpct","ORpct","TOpct","FT4f",
-                         "team_name","Home")] 
-  forPlot.m <- melt(forPlot, id=c("game_id", "team_name", "Home","Nrtg"))
+                         "team_name","home")] 
+  forPlot.m <- melt(forPlot, id=c("game_id", "team_name", "home","Nrtg"))
   
   p <- ggplot(forPlot.m, aes(value, Nrtg)) +
     geom_point(alpha=0.4) + 
@@ -168,7 +168,7 @@ toPctPlot <- function(teamStats, opponent=FALSE) {
            ylab("TO ratio"))
 }
 
-fttPctPlot <- function(teamStats, opponent=FALSE) {
+FT4fPlot <- function(teamStats, opponent=FALSE) {
   return(allTeamsBoxPlot(teamStats, "FT4f", opponent) + 
            geom_boxplot(aes(fill=team_name)) +
            geom_hline(aes(yintercept=median(FT4f)), linetype="dotted") +
@@ -288,86 +288,57 @@ PrintTeamRatings <- function(teamStats, outputFile) {
 
   print(toPctPlot(teamStats))
 
-  print(fttPctPlot(fttPctPlot(teamStats)))
+  print(FT4fPlot(teamStats))
     
-#   message("Offensive and Defensive Ratings - by team ...")
-#   
-#   medianRatingCompetion <- median(teamStats$Ortg)
-#   yLim <- c(60, 170)
-#   
-#   for(i in 1:nrTeams){
-#     plgID <- teams[i,1]
-#     plgName <- teams[i,2]
-#     message(sprintf("processing %s (%i of %i) ...",plgName,i,nrTeams))
-#     forPlot <- teamStats[which(teamStats$team_id==plgID),]
-# 
-#     forPlot <- forPlot[c("Drtg","Ortg","opp_team_name","Home")] 
-#     forPlot$game = c(1:length(forPlot$Ortg))
-#     forPlot <- rename.vars(forPlot, c("opp_team_name"), c("opponent"))
-#     
-#     forPlot.m <- melt(forPlot, id=c("game", "opponent", "Home"))
-#       
-#     #PageWithTrendAndBoxPlot(forPlot.m, plgName, medianRatingCompetion, yLim)
-#     
-#     message(sprintf("processed %s (%i of %i)",plgName,i,nrTeams))
-#   }  
-#   
-#   message("battle of ratio's per team ...")
-#   
-# #   for(i in 1:nrTeams){
-# #     plgID <- teams[i,1]
-# #     plgName <- teams[i,2]
-# #     forPlot <- teamStats[which(teamStats$team_id==plgID),]
-# #     d = data.frame(forPlot$Nrtg, forPlot$Ortg, forPlot$Drtg,
-# #                    forPlot$EFGpct, forPlot$ORpct, 
-# #                    forPlot$TOpct, forPlot$FTTpct,
-# #                    forPlot$opp_EFGpct, forPlot$opp_ORpct, 
-# #                    forPlot$opp_TOpct, forPlot$opp_FTTpct
-# #                    )
-# #     names(d) <- sub("^forPlot.", "", names(d))
-# #     corTeam = cor(d)
-# #     
-# #     p <- levelplot(corTeam, main=paste("Performance correlation matrix for ",plgName), 
-# #                    panel=function(...) {
-# #                     arg <- list(...)
-# #                     panel.levelplot(...)
-# #                     panel.text(arg$x, arg$y, round(arg$z,2))})
-# #     
-# #     print(p)
-# #   }
-#   
-#   message("Ratio Details by team ...")
-#   
-#   yLim <- c(0, 0.8)
-#   
-#   for(i in 1:nrTeams){
-#     plgID <- teams[i,1]
-#     plgName <- teams[i,2]
-#     forPlot <- teamStats[which(teamStats$team_id==plgID),]
-#       
-#     forPlot <- forPlot[c("opp_team_name","Home",
-#                          "EFGpct","ORpct","TOpct","FTTpct",
-#                          "opp_EFGpct","opp_ORpct","opp_TOpct","opp_FTTpct")] 
-#     forPlot$game = c(1:length(forPlot$EFGpct))
-#     forPlot <- rename.vars(forPlot, c("opp_team_name"), c("opponent"))
-#     
-#     PageWithTrendAndBoxPlot(melt(forPlot, measure=c("EFGpct", "opp_EFGpct")), 
-#                             plgName, median(teamStats$EFGpct), yLim)
-#     PageWithTrendAndBoxPlot(melt(forPlot, measure=c("ORpct", "opp_ORpct")), 
-#                             plgName, median(teamStats$ORpct), yLim)
-#     PageWithTrendAndBoxPlot(melt(forPlot, measure=c("TOpct", "opp_TOpct")), 
-#                             plgName, median(teamStats$TOpct), yLim)
-#     PageWithTrendAndBoxPlot(melt(forPlot, measure=c("FTTpct", "opp_FTTpct")), 
-#                             plgName, median(teamStats$FTTpct), yLim)
-#   
-#   #   forCor <- data.frame(forPlot$Nrtg, forPlot$EFGpct,
-#   #                        forPlot$ORpct, forPlot$TOpct, 
-#   #                        forPlot$FTTpct)
-#   #   forCorOpp <- data.frame(forPlot$Nrtg, forPlot$opp_EFGpct,
-#   #                           forPlot$opp_ORpct, forPlot$opp_TOpct, 
-#   #                           forPlot$opp_FTTpct)
-#     
-#   }
+  message("Offensive and Defensive Ratings - by team ...")
+  
+  medianRatingCompetion <- median(teamStats$Ortg)
+  yLim <- c(60, 170)
+  
+  for(i in 1:nrTeams){
+    plgID <- teams[i,1]
+    plgName <- teams[i,2]
+    message(sprintf("processing %s (%i of %i) ...",plgName,i,nrTeams))
+    forPlot <- teamStats[which(teamStats$team_id==plgID),]
+
+    forPlot <- forPlot[c("Drtg","Ortg","opp_team_name","home")] 
+    forPlot$game = c(1:length(forPlot$Ortg))
+    forPlot <- rename.vars(forPlot, c("opp_team_name"), c("opponent"))
+    
+    forPlot.m <- melt(forPlot, id=c("game", "opponent", "home"))
+      
+    PageWithTrendAndBoxPlot(forPlot.m, plgName, medianRatingCompetion, yLim)
+    
+    message(sprintf("processed %s (%i of %i)",plgName,i,nrTeams))
+  }  
+  
+  message("battle of ratio's per team ...")
+  
+  message("Ratio Details by team ...")
+  
+  yLim <- c(0, 0.8)
+  
+  for(i in 1:nrTeams){
+    plgID <- teams[i,1]
+    plgName <- teams[i,2]
+    forPlot <- teamStats[which(teamStats$team_id==plgID),]  
+    forPlot <- forPlot[c("opp_team_name","home",
+                         "EFGpct","ORpct","TOpct","FT4f",
+                         "opp_EFGpct","opp_ORpct","opp_TOpct","opp_FT4f"
+                         )] 
+    
+    forPlot$game = c(1:length(forPlot$EFGpct))
+    forPlot <- rename.vars(forPlot, c("opp_team_name"), c("opponent"))
+
+    PageWithTrendAndBoxPlot(melt(forPlot, measure=c("EFGpct", "opp_EFGpct")), 
+                            plgName, median(teamStats$EFGpct), yLim)
+    PageWithTrendAndBoxPlot(melt(forPlot, measure=c("ORpct", "opp_ORpct")), 
+                            plgName, median(teamStats$ORpct), yLim)
+    PageWithTrendAndBoxPlot(melt(forPlot, measure=c("TOpct", "opp_TOpct")), 
+                            plgName, median(teamStats$TOpct), yLim)
+    PageWithTrendAndBoxPlot(melt(forPlot, measure=c("FT4f", "opp_FT4f")), 
+                            plgName, median(teamStats$FT4f), yLim)
+  }
 #   
 #   message("Shooting plays (2/3/FT) ...")
 #   
