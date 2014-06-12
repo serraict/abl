@@ -21,4 +21,7 @@ regseasTeam <- read.csv2(files[1])
 
 #View(regseasTeam)
 
-PrintTeamRatings(regseasTeam, sprintf("./output/%s_report.pdf", season))
+outputFile <- sprintf("./output/%s_report.pdf", season)
+pdf(outputFile, paper="a4r", width=12)
+PrintTeamRatings(regseasTeam)
+dev.off()

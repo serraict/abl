@@ -162,38 +162,38 @@ paceByTeamPlot <- function(teamStats) {
 }
 
 toPctPlot <- function(teamStats, opponent=FALSE) { 
-  return(allTeamsBoxPlot(teamStats, "TOpct", opponent) +  
+  return(allTeamsBoxPlot(teamStats, "TOpct", opponent, "Turnovers per Possession") +  
            geom_hline(aes(yintercept=median(TOpct)), linetype="dotted") +          
-           labs(title ="Turnovers per Possession") +
            ylab("TO ratio"))
 }
 
 FT4fPlot <- function(teamStats, opponent=FALSE) {
-  return(allTeamsBoxPlot(teamStats, "FT4f", opponent) + 
+  return(allTeamsBoxPlot(teamStats, "FT4f", opponent, "Free throws made per field goal attempt") + 
            geom_boxplot(aes(fill=team_name)) +
            geom_hline(aes(yintercept=median(FT4f)), linetype="dotted") +
-           labs(title ="Free throws made per field goal attempt") +
            ylab(""))
 }
 
 orPctPlot <- function(teamStats, opponent=FALSE){
-  return(allTeamsBoxPlot(teamStats, "ORpct", opponent) + 
+  return(allTeamsBoxPlot(teamStats, "ORpct", opponent,"Offensive Rebound % (OR%)") + 
            geom_hline(aes(yintercept=median(ORpct)), linetype="dotted") +
-           labs(title ="Offensive Rebound % (OR%)") +
            ylab("OR%")   )
 }
 
 efgPctPlot <- function(teamStats, opponent=FALSE) {
-  return(allTeamsBoxPlot(teamStats, "EFGpct", opponent) +
+  return(allTeamsBoxPlot(teamStats, "EFGpct", opponent, "Effective Field Goal % (EFG%)") +
            geom_hline(aes(yintercept=median(EFGpct)), linetype="dotted") +
-           labs(title ="Effective Field Goal % (EFG%)") +
            ylab("EFG%"))
 } 
 
-allTeamsBoxPlot <- function(teamStats, field, opponent=FALSE) {
-  if(opponent) { field <- paste("opp_", field, sep="") }
+allTeamsBoxPlot <- function(teamStats, field, opponent=FALSE, title="") {
+  if(opponent) { 
+    field <- paste("opp_", field, sep="") 
+    title <- paste("Opponent", title, sep=" ") 
+  }
   aest <- aes_string(x = "team_name", y = field)
   return(ggplot(teamStats, aest) + 
+           labs(title=title) +
            geom_boxplot(aes(fill=team_name)) +
            theme(legend.position="none") +
            theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
@@ -240,7 +240,7 @@ shotSelectionHistory <- function(teamStats) {
 #
 ######################################################################
 
-PrintTeamRatings <- function(teamStats, outputFile) {
+PrintTeamRatings <- function(teamStats) {
   message("Creating team rating output file ...")
   
   teams <- sqldf(paste("select team_id, team_name from teamStats",
@@ -248,8 +248,6 @@ PrintTeamRatings <- function(teamStats, outputFile) {
   nrTeams <- nrow(teams)
   message(sprintf("Found %i teams in the team rating data set ...",nrow(teams)))
   print(teams)
-  
-  #pdf(outputFile, paper="a4r", width=12)
   
   # Offensive and Defensive Ratings - Competition
   print(OrtgByTeamPlot(teamStats))
@@ -283,13 +281,21 @@ PrintTeamRatings <- function(teamStats, outputFile) {
   # Performance Indicators - Competition
   
   print(efgPctPlot(teamStats))
-
+  
   print(orPctPlot(teamStats))
-
+  
   print(toPctPlot(teamStats))
-
+  
   print(FT4fPlot(teamStats))
-    
+  
+  print(efgPctPlot(teamStats, TRUE))
+  
+  print(orPctPlot(teamStats, TRUE))
+  
+  print(toPctPlot(teamStats, TRUE))
+  
+  print(FT4fPlot(teamStats, TRUE))
+  
   message("Offensive and Defensive Ratings - by team ...")
   
   medianRatingCompetion <- median(teamStats$Ortg)
@@ -408,10 +414,6 @@ PrintTeamRatings <- function(teamStats, outputFile) {
 #   #         geom="bar", fill=variable, weight=value)
 #     
 #   }
-  
-  #dev.off()
-  
-  
   
   # print some table to screen
   
