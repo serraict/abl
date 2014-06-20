@@ -1,5 +1,3 @@
-library(sqldf)
-
 ############
 #
 # Constants
@@ -36,16 +34,14 @@ CreateAdvancedStatsFiles <- function (inputDirectory) {
   # player files
   player_boxscores <- PrettyPlayerBoxScores(boxscores, 
                                             read.csv(sprintf("%s/06-boxscores-players.csv", inputDirectory)), 
-                                            read.csv(sprintf("%s/02-persons.csv", inputDirectory))                                            )  
-  
-  View(player_boxscores)
-  stop()
+                                            read.csv(sprintf("%s/02-persons.csv", inputDirectory))                                            
+                                            )
   
   # assuming a single competition
   PrintCompetitionStatistics(games, teams, boxscores)
   
   #
-  CreateAdvancedStatsFilesForCompetition(games, teams, boxscores)
+  CreateAdvancedStatsFilesForCompetition(games, teams, boxscores, player_boxscores)
 }
 
 PrintCompetitionStatistics <- function(games, teams, sts) {
@@ -105,19 +101,20 @@ PrettyBoxScores <- function(plainBoxScore, games, teams) {
   # CheckMinutesPlayed(teamStats)
 }
 
-CreateAdvancedStatsFilesForCompetition <- function (games, teams, boxscores, compdesc = "2013-2014") {
+CreateAdvancedStatsFilesForCompetition <- function (games, teams, team_boxscores, player_boxscores, compdesc = "2013-2014") {
 
   advancedTeamsStatsOutputFile <- paste("./output/", compdesc, "_advanced_team_stats.csv", sep="")
   advancedPlayerStatsOutputFile <- paste("./output/", compdesc, "_advanced_player_stats.csv", sep="")
-      
-  teamStats <- GetAdvancedTeamStats(games, teams, boxscores) 
-  # playerStats <- GetAdvancedPlayerStats(teamStats, compdesc)
-   
+
+  
+  teamStats <- GetAdvancedTeamStats(games, teams, team_boxscores) 
+  playerStats <- GetAdvancedPlayerStats(teamStats, player_boxscores)
+
   message("Writing result file ", advancedTeamsStatsOutputFile)
-  write.csv2(teamStats, advancedTeamsStatsOutputFile)
+  write.csv(teamStats, advancedTeamsStatsOutputFile)
   
   message("Writing result file ", advancedPlayerStatsOutputFile)
-  # write.csv2(playerStats, advancedPlayerStatsOutputFile)
+  write.csv(playerStats, advancedPlayerStatsOutputFile)
   
   return(c(advancedTeamsStatsOutputFile,advancedPlayerStatsOutputFile))
 }

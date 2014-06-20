@@ -17,10 +17,11 @@ files <- CreateAdvancedStatsFiles(inputDirectory)
 print(files)
 
 # read to check results:
-regseasTeam <- read.csv2(files[1])
-#regseasPlyr <- read.csv2(sprintf("./output/%s_regseas_advanced_player_stats.csv", season))
+regseasTeam <- read.csv(files[1])
+regseasPlyr <- read.csv(files[2])
 
 View(regseasTeam)
+View(regseasPlyr)
 
 #outputFile <- sprintf("./output/%s_report.pdf", season)
 #pdf(outputFile, paper="a4r", width=12)
