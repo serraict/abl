@@ -33,6 +33,14 @@ CreateAdvancedStatsFiles <- function (inputDirectory) {
   games <- read.csv(sprintf("%s/04-games.csv", inputDirectory))
   boxscores <- PrettyBoxScores(read.csv(sprintf("%s/05-boxscores-teams.csv", inputDirectory)), games, teams) 
   
+  # player files
+  player_boxscores <- PrettyPlayerBoxScores(boxscores, 
+                                            read.csv(sprintf("%s/06-boxscores-players.csv", inputDirectory)), 
+                                            read.csv(sprintf("%s/02-persons.csv", inputDirectory))                                            )  
+  
+  View(player_boxscores)
+  stop()
+  
   # assuming a single competition
   PrintCompetitionStatistics(games, teams, boxscores)
   
@@ -89,6 +97,8 @@ PrettyBoxScores <- function(plainBoxScore, games, teams) {
   
   combinedboxScore <- rbind(homeBoxscore, awayBoxscore)
 
+  
+  
   return(combinedboxScore)
   
   # sanity checks ...
