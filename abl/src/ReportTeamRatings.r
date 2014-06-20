@@ -109,7 +109,7 @@ fourFactorsForCompetitionCorrelationMatrix <- function(teamStats) {
 plotfourFactorsForCompetitionCorrelationMatrix <- function(teamStats) {
   cor_melt <- melt(fourFactorsForCompetitionCorrelationMatrix(teamStats))
   return(ggplot(cor_melt, aes(Var1, Var2, fill=value, label=round(value, 2))) +
-         scale_fill_gradient() +
+         #scale_fill_gradient() +
          geom_tile() +
          geom_text()
   )
@@ -279,6 +279,9 @@ PrintTeamRatings <- function(teamStats) {
   print(paceByTeamPlot(teamStats))
   
   # Performance Indicators - Competition
+  
+  print(fourFactorsForCompetition(teamStats))
+  print(plotfourFactorsForCompetitionCorrelationMatrix(teamStats))
   
   print(efgPctPlot(teamStats))
   
