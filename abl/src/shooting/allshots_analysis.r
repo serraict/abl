@@ -12,7 +12,7 @@ source("src/shooting/shooting.r")
 
 # read play-by-play data for game 2891071 (first play-off game Redwell Gunners)
 pbp <- read.csv("./input/2013-2014/07-play-by-play.csv")
-shots <- pbp[(pbp$game_id == 2891071 & pbp$log_action == 'shot'),]
+shots <- pbp[(pbp$log_action == 'shot'),]
 
 shots <- rename(shots, 
                   c("log_param_1"="Team"
@@ -26,5 +26,12 @@ shots <- rename(shots,
 shots <- transform(shots, 
                    ShotLocation = colsplit(Coordinates, pattern = "\\+", names = c('x', 'y')))
 
-shotsTeam1 <- shots[(shots$Team == 1),]
-shotsTeam2 <- shots[(shots$Team == 2),]
+# Made == indicates a made fieldgoal; Why Points -1? I don't know
+shots <- transform(shots, 
+                   PointsScored = ifelse(Made == 0, as.numeric(Points) - 1, 0))
+
+shotsHome <- shots[(shots$Team == 1),]
+shotsAway <- shots[(shots$Team == 2),]
+
+plotShots(shotsHome)
+plotShots(shotsAway)
