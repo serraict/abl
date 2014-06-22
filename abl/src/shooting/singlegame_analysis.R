@@ -1,4 +1,7 @@
 library(plyr)
+library(reshape2)
+
+source("src/shooting/shooting.r")
 
 # create a shot chart for a single game
 # inspiration:
@@ -9,9 +12,9 @@ library(plyr)
 
 # read play-by-play data for game 2891071 (first play-off game Redwell Gunners)
 pbp <- read.csv("./input/2013-2014/07-play-by-play.csv")
-pbpGame <- pbp[(pbp$game_id == 2891071 & pbp$log_action == 'shot'),]
+shots <- pbp[(pbp$game_id == 2891071 & pbp$log_action == 'shot'),]
 
-pbpGame <- rename(pbpGame, 
+shots <- rename(shots, 
                   c("log_param_1"="Team"
                   ,"log_param_2"="PlayerShirtNumber"
                   ,"log_param_3"="Coordinates"
@@ -20,5 +23,8 @@ pbpGame <- rename(pbpGame,
                   ,"log_param_6"="Points"
                   ))
 
-# filter out shooting events
-# filter out 
+shots <- transform(shots, 
+                   ShotLocation = colsplit(Coordinates, pattern = "\\+", names = c('x', 'y')))
+
+shotsTeam1 <- shots[(shots$Team == 1),]
+shotsTeam2 <- shots[(shots$Team == 2),]
