@@ -36,4 +36,5 @@ shotsGunners <- rbind(shotsHomeWithPlayerData, shotsAwayWithPlayerData)
 # plotShots(shotsAway)
 
 plotShots(shotsGunners)
-plotShotsByPlayer(shotsGunners)
+
+#plotShotsByPlayer(shotsGunners)

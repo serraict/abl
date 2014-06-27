@@ -1,4 +1,6 @@
 PrettyPlayerBoxScores <- function(prettyBoxscore, rawPlayerBoxscore, players) {
+  players <- transform(players, name = sprintf('%s, %s (%s)', last_name, first_name, person_id))
+  
   # merge on game_id and team_id to link player data to the correct row
   boxscoreCopy <- merge(prettyBoxscore, rawPlayerBoxscore, by=c("game_id", "team_id"))   
   boxscoreCopy <- merge(players, boxscoreCopy, by="person_id")  

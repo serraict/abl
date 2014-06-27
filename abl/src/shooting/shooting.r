@@ -1,52 +1,62 @@
 library(plyr)
 library(ggplot2)
+library(png)
+library(grid)
 
+getCourt <- function() {
+  img <- readPNG("docs/court-coordinates.png")
+  g <- rasterGrob(img, interpolate=TRUE)
+  return(g)
+}
+
+courtImg <- getCourt()
 
 shotPlot <- function(shots) { 
   p <- ggplot(shots, aes(ShotLocation.x, ShotLocation.y, 
                          colour=factor(PointsScored)
                          )) +
-    geom_point(alpha=0.4) 
-  #+ 
-  #  stat_smooth(method="lm") +
-  #  facet_wrap(~variable,scales="free")
-  
+        xlim(0,279) + ylim(-200,0) +
+        geom_point(alpha=0.5) +
+        coord_fixed() +
+        annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0)
   return(p)
 }
 
-plotShots <- function(shots) {
-  print(shotPlot(shots))
-  
-  # 10px binning:
+shootingHeatMap <- function(shots) {
+  binSize <- 5
   shotsBin <- transform(shots 
-                        , xbin = ShotLocation.x %/% 5
-                        , ybin = ShotLocation.y %/% 5
+                        , xbin = ShotLocation.x %/% binSize
+                        , ybin = ShotLocation.y %/% binSize
   )
   
   shots.count <- count(shotsBin, c("xbin","ybin"))
   shots.eff <-aggregate(list(PointsScored=shotsBin$PointsScored), by=list(xbin=shotsBin$xbin,ybin=shotsBin$ybin), 
-                      FUN=mean, na.rm=TRUE)
+                        FUN=mean, na.rm=TRUE)
   
   shots.agg <- merge(shots.count, shots.eff, by=c("xbin", "ybin"))
   
-#   shots.agg <- transform(shots.agg, 
-#                          color = getColorByPoints(PointsScored))
+  #   shots.agg <- transform(shots.agg, 
+  #                          color = getColorByPoints(PointsScored))
   
   shots.agg$color <- sapply(shots.agg$PointsScored, getColorByPoints)
-
+  
   # Size symbols by number of shots.
-  symbols(shots.agg$xbin, 
+  plot <- symbols(shots.agg$xbin, 
           shots.agg$ybin, 
           squares=sqrt(shots.agg$freq)/3, asp=1, inches=FALSE,
           bg=shots.agg$color,
-          fg=NA)
+          fg=NA) 
+  return(plot)
+}
+
+plotShots <- function(shots) {
+  print(shotPlot(shots))
+  print(shootingHeatMap(shots))
 }
 
 plotShotsByPlayer <- function(shots) {
-  persons <- unique(shots$person_id)
-  for(p in persons){
-    plotShots(shots[(shots$person_id == p),])
-  }
+  p <- shotPlot(shots) + facet_wrap(~name)  #,scales="free"
+  print(p)
 }
 
 splitCoordinates <- function(coordinates) {
@@ -98,6 +108,9 @@ getShotsFromPlayByPlay <- function(pbp) {
   
   shots <- transform(shots, 
                      ShotLocation = colsplit(Coordinates, pattern = "\\+", names = c('x', 'y')))
+  
+  # use the coordinate system of the court-coordinates reference (see docs)
+  shots$ShotLocation.y <- shots$ShotLocation.y * -1
   
   # Made == indicates a made fieldgoal; Why Points -1? I don't know
   shots <- transform(shots, 
