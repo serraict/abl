@@ -18,15 +18,15 @@ shotPlot <- function(shots) {
         xlim(0,279) + ylim(-200,0) +
         geom_point(alpha=0.5) +
         coord_fixed() +
-        annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0)
+        annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) 
   return(p)
 }
 
 shootingHeatMap <- function(shots) {
   binSize <- 5
   shotsBin <- transform(shots 
-                        , xbin = ShotLocation.x %/% binSize
-                        , ybin = ShotLocation.y %/% binSize
+                        , xbin = (ShotLocation.x %/% binSize)
+                        , ybin = (ShotLocation.y %/% binSize)
   )
   
   shots.count <- count(shotsBin, c("xbin","ybin"))
@@ -35,18 +35,13 @@ shootingHeatMap <- function(shots) {
   
   shots.agg <- merge(shots.count, shots.eff, by=c("xbin", "ybin"))
   
-  #   shots.agg <- transform(shots.agg, 
-  #                          color = getColorByPoints(PointsScored))
-  
   shots.agg$color <- sapply(shots.agg$PointsScored, getColorByPoints)
   
-  # Size symbols by number of shots.
-  plot <- symbols(shots.agg$xbin, 
-          shots.agg$ybin, 
-          squares=sqrt(shots.agg$freq)/3, asp=1, inches=FALSE,
-          bg=shots.agg$color,
-          fg=NA) 
-  return(plot)
+  p <- ggplot(shots.agg, aes(xbin, ybin)) +
+                  xlim(0,279) + ylim(-200,0) +
+                  geom_point(alpha=0.5) +
+                  coord_fixed()
+  return(p)
 }
 
 plotShots <- function(shots) {
