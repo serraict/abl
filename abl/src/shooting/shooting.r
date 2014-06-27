@@ -1,9 +1,21 @@
 library(plyr)
+library(ggplot2)
+
+
+shotPlot <- function(shots) { 
+  p <- ggplot(shots, aes(ShotLocation.x, ShotLocation.y, 
+                         colour=factor(PointsScored)
+                         )) +
+    geom_point(alpha=0.4) 
+  #+ 
+  #  stat_smooth(method="lm") +
+  #  facet_wrap(~variable,scales="free")
+  
+  return(p)
+}
 
 plotShots <- function(shots) {
-  symbols(shots$ShotLocation.x, 
-          shots$ShotLocation.y, 
-          circles=rep(1,length(shots$ShotLocation.x)), asp=1, inches=FALSE)
+  print(shotPlot(shots))
   
   # 10px binning:
   shotsBin <- transform(shots 
@@ -22,13 +34,19 @@ plotShots <- function(shots) {
   
   shots.agg$color <- sapply(shots.agg$PointsScored, getColorByPoints)
 
-  View(shots.agg)
   # Size symbols by number of shots.
   symbols(shots.agg$xbin, 
           shots.agg$ybin, 
-          squares=sqrt(shots.agg$freq)/6, asp=1, inches=FALSE,
+          squares=sqrt(shots.agg$freq)/3, asp=1, inches=FALSE,
           bg=shots.agg$color,
           fg=NA)
+}
+
+plotShotsByPlayer <- function(shots) {
+  persons <- unique(shots$person_id)
+  for(p in persons){
+    plotShots(shots[(shots$person_id == p),])
+  }
 }
 
 splitCoordinates <- function(coordinates) {
@@ -66,3 +84,24 @@ getColorByPoints <- function(val) {
   return(cols[colIndex])
 }
 
+getShotsFromPlayByPlay <- function(pbp) {
+  shots <- pbp[(pbp$log_action == 'shot'),]
+  
+  shots <- rename(shots, 
+                  c("log_param_1"="Team"
+                    ,"log_param_2"="PlayerShirtNumber"
+                    ,"log_param_3"="Coordinates"
+                    ,"log_param_4"="Made"
+                    ,"log_param_5"="ShotType"
+                    ,"log_param_6"="Points"
+                  ))
+  
+  shots <- transform(shots, 
+                     ShotLocation = colsplit(Coordinates, pattern = "\\+", names = c('x', 'y')))
+  
+  # Made == indicates a made fieldgoal; Why Points -1? I don't know
+  shots <- transform(shots, 
+                     PointsScored = ifelse(Made == 0, as.numeric(Points) - 1, 0))
+  
+  return(shots)
+}

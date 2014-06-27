@@ -2,6 +2,7 @@ source("./src/download.r")
 source("./src/AdvancedTeamStats.r")
 source("./src/AdvancedPlayerStats.r")
 source("./src/ReportTeamRatings.r")
+source("./src/shooting/shooting.r")
 
 args<-commandArgs(TRUE)
 
@@ -22,6 +23,10 @@ regseasPlyr <- read.csv(files[2])
 
 View(regseasTeam)
 View(regseasPlyr)
+
+
+
+
 
 #outputFile <- sprintf("./output/%s_report.pdf", season)
 #pdf(outputFile, paper="a4r", width=12)
