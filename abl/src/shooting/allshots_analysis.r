@@ -49,15 +49,12 @@ plot(byOpponentPlot)
 
 # per team and by player
 
-byTeam <- split(advancedShots, advancedShots$team_name)
+byTeam <- split(advancedShots, advancedShots$team_name)  # why not drop=TRUE?
 
 for(team in names(byTeam)) {
-  print(team)
-  teamShots <- byTeam[[team]]
-  
-  plot <- shotPlot(teamShots)
-  shootingHeatMap <- shootingHeatMapDataFrame(teamShots)
-  
+  allTeamShots <- byTeam[[team]]
+  plot <- shotPlot(allTeamShots)
+  shootingHeatMap <- shootingHeatMapDataFrame(allTeamShots)  
   plot(plot + labs(title=paste(team, "- All shots")))
   plot(shootingHeatMapPlot(shootingHeatMap) + 
          labs(title=paste(team, " - Shooting heat map")))
@@ -66,8 +63,15 @@ for(team in names(byTeam)) {
     facet_wrap(~name) +
     labs(title=paste(team, "Shooting by player"))
   plot(byPlayerPlot)
+  
+  byPlayer <- split(allTeamShots, allTeamShots$name, drop=TRUE)
+  
+  for(player in names(byPlayer)) {
+    allPlayerShots <- byPlayer[[player]]
+    plot <- shotPlot(allPlayerShots)
+    shootingHeatMap <- shootingHeatMapDataFrame(allPlayerShots)  
+    plot(plot + labs(title=paste(player, team, "- All shots")))
+    plot(shootingHeatMapPlot(shootingHeatMap) + 
+           labs(title=paste(player, team, " - Shooting heat map")))    
+  }
 }
-
-
-
-
