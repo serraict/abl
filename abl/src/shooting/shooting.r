@@ -10,6 +10,7 @@ getCourt <- function() {
 }
 
 courtImg <- getCourt()
+shootingColorScale <- c("#49FF00FF", "#FFDB00FF", "#FF0000FF")
 
 shotPlot <- function(shots) { 
   p <- ggplot(shots, aes(ShotLocation.x, ShotLocation.y, 
@@ -23,24 +24,28 @@ shotPlot <- function(shots) {
 }
 
 shootingHeatMap <- function(shots) {
-  binSize <- 5
+  binSize <- 10
   shotsBin <- transform(shots 
-                        , xbin = (ShotLocation.x %/% binSize)
-                        , ybin = (ShotLocation.y %/% binSize)
+                        , xbin = (ShotLocation.x %/% binSize) * binSize + binSize/2
+                        , ybin = (ShotLocation.y %/% binSize) * binSize + binSize/2
   )
-  
-  shots.count <- count(shotsBin, c("xbin","ybin"))
-  shots.eff <-aggregate(list(PointsScored=shotsBin$PointsScored), by=list(xbin=shotsBin$xbin,ybin=shotsBin$ybin), 
+
+  shots.count <- count(shotsBin, c("xbin","ybin","name"))
+
+  shots.eff <-aggregate(list(PointsScored=shotsBin$PointsScored), 
+                        by=list(xbin=shotsBin$xbin,ybin=shotsBin$ybin,name=shots$name), 
                         FUN=mean, na.rm=TRUE)
-  
+
   shots.agg <- merge(shots.count, shots.eff, by=c("xbin", "ybin"))
   
   shots.agg$color <- sapply(shots.agg$PointsScored, getColorByPoints)
   
-  p <- ggplot(shots.agg, aes(xbin, ybin)) +
+  p <- ggplot(shots.agg, aes(xbin, ybin, size=freq, colour=PointsScored, shape='square')) +
                   xlim(0,279) + ylim(-200,0) +
-                  geom_point(alpha=0.5) +
-                  coord_fixed()
+                  geom_point(alpha=0.7, shape=15) +
+                  scale_colour_gradientn(colours = shootingColorScale, limits=c(0.2,2.0)) +
+                  coord_fixed() +
+                  annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) 
   return(p)
 }
 
@@ -50,7 +55,7 @@ plotShots <- function(shots) {
 }
 
 plotShotsByPlayer <- function(shots) {
-  p <- shotPlot(shots) + facet_wrap(~name)  #,scales="free"
+  p <- shotPlot(shots) + facet_wrap(~name) 
   print(p)
 }
 
