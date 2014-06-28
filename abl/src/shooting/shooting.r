@@ -23,24 +23,25 @@ shotPlot <- function(shots) {
   return(p)
 }
 
-shootingHeatMap <- function(shots) {
-  binSize <- 10
+shootingHeatMapDataFrame <- function(shots, binSize=10) {
   shotsBin <- transform(shots 
                         , xbin = (ShotLocation.x %/% binSize) * binSize + binSize/2
                         , ybin = (ShotLocation.y %/% binSize) * binSize + binSize/2
   )
-
-  shots.count <- count(shotsBin, c("xbin","ybin","name"))
-
-  shots.eff <-aggregate(list(PointsScored=shotsBin$PointsScored), 
-                        by=list(xbin=shotsBin$xbin,ybin=shotsBin$ybin,name=shots$name), 
+  
+  shots.count <- count(shotsBin, c("xbin","ybin"))
+   
+  shots.eff <- aggregate(list(PointsPerShot=shotsBin$PointsScored), 
+                        by=list(xbin=shotsBin$xbin,ybin=shotsBin$ybin), 
                         FUN=mean, na.rm=TRUE)
-
+  
   shots.agg <- merge(shots.count, shots.eff, by=c("xbin", "ybin"))
   
-  shots.agg$color <- sapply(shots.agg$PointsScored, getColorByPoints)
-  
-  p <- ggplot(shots.agg, aes(xbin, ybin, size=freq, colour=PointsScored, shape='square')) +
+  return(shots.agg) 
+}
+
+shootingHeatMapPlot <- function(shootingHeatMapDataFrame) { 
+  p <- ggplot(shootingHeatMapDataFrame, aes(xbin, ybin, size=freq, colour=PointsPerShot, shape='square')) +
                   xlim(0,279) + ylim(-200,0) +
                   geom_point(alpha=0.7, shape=15) +
                   scale_colour_gradientn(colours = shootingColorScale, limits=c(0.2,2.0)) +

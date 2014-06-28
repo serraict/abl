@@ -30,9 +30,12 @@ shotsAwayWithPlayerData <- merge(awayGames, shotsAway,
 
 advancedShots <- rbind(shotsHomeWithPlayerData, shotsAwayWithPlayerData)
 
+# competition & by team
+shootingHeatMap <- shootingHeatMapDataFrame(advancedShots)
 plot <- shotPlot(advancedShots)
 
-print(plot)
+plot(plot + labs(title="All games"))
+plot(shootingHeatMapPlot(shootingHeatMap) + labs(title="Shooting heat map - all games"))
 
 byTeamPlot <- plot + 
   facet_wrap(~team_name) +
@@ -43,4 +46,28 @@ byOpponentPlot <- plot +
   facet_wrap(~opp_team_name) +
   labs(title="Opponent shooting by team")
 plot(byOpponentPlot)
+
+# per team and by player
+
+byTeam <- split(advancedShots, advancedShots$team_name)
+
+for(team in names(byTeam)) {
+  print(team)
+  teamShots <- byTeam[[team]]
+  
+  plot <- shotPlot(teamShots)
+  shootingHeatMap <- shootingHeatMapDataFrame(teamShots)
+  
+  plot(plot + labs(title=paste(team, "- All shots")))
+  plot(shootingHeatMapPlot(shootingHeatMap) + 
+         labs(title=paste(team, " - Shooting heat map")))
+  
+  byPlayerPlot <- plot + 
+    facet_wrap(~name) +
+    labs(title=paste(team, "Shooting by player"))
+  plot(byPlayerPlot)
+}
+
+
+
 
