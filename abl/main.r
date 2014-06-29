@@ -24,10 +24,6 @@ regseasPlyr <- read.csv(files[2])
 View(regseasTeam)
 View(regseasPlyr)
 
-
-
-
-
 #outputFile <- sprintf("./output/%s_report.pdf", season)
 #pdf(outputFile, paper="a4r", width=12)
 #PrintTeamRatings(regseasTeam)
