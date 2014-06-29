@@ -10,7 +10,9 @@ getCourt <- function() {
 }
 
 courtImg <- getCourt()
-shootingColorScale <- c("#49FF00FF", "#FFDB00FF", "#FF0000FF")
+shootingColorScale <- c("#49FF00FF", "#49FF00FF",  
+                        "#FFDB00FF", 
+                        "#FF0000FB", "#FF0000FC", "#FF0000FD", "#FF0000FE", "#FF0000FF")
 
 shotPlot <- function(shots) { 
   p <- ggplot(shots, aes(ShotLocation.x, ShotLocation.y, 
@@ -44,7 +46,7 @@ shootingHeatMapPlot <- function(shootingHeatMapDataFrame) {
   p <- ggplot(shootingHeatMapDataFrame, aes(xbin, ybin, size=freq, colour=PointsPerShot, shape='square')) +
                   xlim(0,279) + ylim(-200,0) +
                   geom_point(alpha=0.7, shape=15) +
-                  scale_colour_gradientn(colours = shootingColorScale, limits=c(0.2,2.0)) +
+                  scale_colour_gradientn(colours = shootingColorScale, limits=c(0.0,3.0)) +
                   coord_fixed() +
                   annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) 
   return(p)
