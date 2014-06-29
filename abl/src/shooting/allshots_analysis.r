@@ -52,7 +52,8 @@ reportShooting <- function() {
   
   byTeam <- split(advancedShots, advancedShots$team_name)  # why not drop=TRUE?
   
-  for(team in c("Allianz Swans Gmunden")) {  # names(byTeam) c("Redwell Gunners Oberwart")
+  #  for (team in c("Redwell Gunners Oberwart")) {
+  for(team in names(byTeam)) {  
     allTeamShots <- byTeam[[team]]
     plot <- shotPlot(allTeamShots)
     shootingHeatMap <- shootingHeatMapDataFrame(allTeamShots)  
