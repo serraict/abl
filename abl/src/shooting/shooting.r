@@ -21,7 +21,8 @@ shotPlot <- function(shots) {
         xlim(0,279) + ylim(-200,0) +
         geom_point(alpha=0.5) +
         coord_fixed() +
-        annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) 
+        annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) +
+        theme_bw()
   return(p)
 }
 
@@ -48,6 +49,7 @@ shootingHeatMapPlot <- function(shootingHeatMapDataFrame) {
                   geom_point(alpha=0.7, shape=15) +
                   scale_colour_gradientn(colours = shootingColorScale, limits=c(0.0,3.0)) +
                   coord_fixed() +
+                  theme_bw() +
                   annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) 
   return(p)
 }
