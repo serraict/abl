@@ -9,10 +9,42 @@ getCourt <- function() {
   return(g)
 }
 
+getShootingZones <- function() {
+  img <- readPNG("docs/court-coordinates-shooting-zones.png")
+  return(img)  
+}
+
 courtImg <- getCourt()
 shootingColorScale <- c("#49FF00FF", "#49FF00FF",  
                         "#FFDB00FF", 
                         "#FF0000FB", "#FF0000FC", "#FF0000FD", "#FF0000FE", "#FF0000FF")
+shootingZones <- getShootingZones()
+shootingZonesColorMap <- list(
+    cffcc33='left.corner.3',
+    cff9933='left.above.the.break.3',
+    cff6633='top.3',
+    cff3333='right.above.the.break.3',
+    cff3399='right.corner.3',
+    c33ffcc='left.baseline.long.2',
+    c33ffff='left.long.2',
+    c33ccff='top.long.2',
+    c3366ff='right.long.2',
+    c6633ff='right.baseline.long.2',
+    c33ff00='left.short.2',
+    c99ff00='top.short.2',
+    cffff00='right.short.2',
+    cff9900='left.at.basket',
+    cff6600='top.at.basket',
+    cff3300='right.at.basket'    
+  ) 
+
+getShootingZone <- function(x, y) {
+  rowIndex <- y
+  colIndex <- x
+  zc <- shootingZones[rowIndex,colIndex,]
+  clr <- tolower(gsub('#', 'c', rgb(zc[1], zc[2], zc[3])))
+  return(shootingZonesColorMap[[clr]])
+}
 
 shotPlot <- function(shots) { 
   p <- ggplot(shots, aes(ShotLocation.x, ShotLocation.y, 

@@ -13,3 +13,7 @@ test.splitting.of.basket.hotel.coordinates.y <- function() {
   expect_that(splitCoordinatesY("175+37"), equals(37))
 }
 
+test.shooting.zones <- function() {
+  expect_that(getShootingZone(12,35), equals('left.corner.3'))
+  expect_that(getShootingZone(30,135), equals('left.above.the.break.3'))
+}
