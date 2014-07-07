@@ -16,4 +16,9 @@ test.splitting.of.basket.hotel.coordinates.y <- function() {
 test.shooting.zones <- function() {
   expect_that(getShootingZone(12,35), equals('left.corner.3'))
   expect_that(getShootingZone(30,135), equals('left.above.the.break.3'))
+  expect_that(getShootingZone(140,160), equals('top.3'))
+  expect_that(getShootingZone(280-12,35), equals('right.corner.3'))
+  expect_that(getShootingZone(280-30,135), equals('right.above.the.break.3'))
+  expect_that(getShootingZone(127,25), equals('right.at.basket'))
+  
 }

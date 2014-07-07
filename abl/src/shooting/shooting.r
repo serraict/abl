@@ -147,7 +147,11 @@ getShotsFromPlayByPlay <- function(pbp) {
                      ShotLocation = colsplit(Coordinates, pattern = "\\+", names = c('x', 'y')))
   
   # use the coordinate system of the court-coordinates reference (see docs)
+  shots$ShootingZone <- mapply(getShootingZone,
+                               shots$ShotLocation.x,
+                               shots$ShotLocation.y)
   shots$ShotLocation.y <- shots$ShotLocation.y * -1
+
   
   # Made == indicates a made fieldgoal; Why Points -1? I don't know
   shots <- transform(shots, 

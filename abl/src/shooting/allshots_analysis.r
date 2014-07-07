@@ -77,4 +77,6 @@ reportShooting <- function() {
              labs(title=paste(player, team, " - Shooting heat map")))    
     }
   }
+  
+  return(advancedShots)
 }
