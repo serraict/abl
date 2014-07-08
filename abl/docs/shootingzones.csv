@@ -1,0 +1,17 @@
+shootingZone,color,x,y
+left.corner.3,ffcc33,12,34
+left.above.the.break.3,ff9933,29,141
+top.3,ff6633,140,76
+right.above.the.break.3,ff3333,242,141
+right.corner.3,ff3399,268,34
+left.baseline.long.2,33ffcc,38,35
+left.long.2,33ffff,68,102
+top.long.2,33ccff,140,128
+right.long.2,3366ff,231,102
+right.baseline.long.2,6633ff,239,34
+left.short.2,33ff00,70,50
+top.short.2,99ff00,140,100
+right.short.2,ffff00,210,50
+left.at.basket,ff9900,110,30
+top.at.basket,ff6600,140,70
+right.at.basket,ff3300,170,30

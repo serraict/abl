@@ -18,7 +18,11 @@ courtImg <- getCourt()
 shootingColorScale <- c("#49FF00FF", "#49FF00FF",  
                         "#FFDB00FF", 
                         "#FF0000FB", "#FF0000FC", "#FF0000FD", "#FF0000FE", "#FF0000FF")
+
 shootingZones <- getShootingZones()
+shootingZonesDF <- read.csv('./docs/shootingzones.csv')
+
+#todo: build this map from the dataframe
 shootingZonesColorMap <- list(
     cffcc33='left.corner.3',
     cff9933='left.above.the.break.3',
@@ -56,6 +60,15 @@ shotPlot <- function(shots) {
         annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) +
         theme_bw()
   return(p)
+}
+
+shootingByZoneDataFrame <- function(shots) {
+  shots.agg <- ddply(shots, .(shootingZone), summarize, 
+                     FGA=length(shootingZone),
+                     Points=sum(PointsScored),
+                     PPS=mean(PointsScored)
+                     )
+  return(merge(shootingZonesDF, shots.agg, by=c("shootingZone"), all = TRUE))
 }
 
 shootingHeatMapDataFrame <- function(shots, binSize=10) {
