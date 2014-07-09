@@ -2,6 +2,7 @@ library(plyr)
 library(ggplot2)
 library(png)
 library(grid)
+library(reshape2)
 
 getCourt <- function() {
   img <- readPNG("docs/court-coordinates.png")
@@ -182,6 +183,10 @@ getColorByPoints <- function(val) {
 }
 
 getShotsFromPlayByPlay <- function(pbp) {
+  nextPlay <- pbp[-1,c('log_action')]         # skip first row
+  assisted <- c((nextPlay=='assist'), FALSE)  # append item to match nr of rows
+  pbp$assisted <- assisted
+  
   shots <- pbp[(pbp$log_action == 'shot'),]
   
   shots <- rename(shots, 

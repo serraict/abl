@@ -9,6 +9,7 @@ source("src/shooting/shooting.r")
 # http://flowingdata.com/2012/10/04/more-on-making-heat-maps-in-r/
 
 reportShooting <- function() {
+  pbp <- read.csv("./input/2013-2014/07-play-by-play.csv")
   shots <- getShotsFromPlayByPlay(pbp)
   
   regseasPlyr <- read.csv("output/2013-2014_advanced_player_stats.csv")
