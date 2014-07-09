@@ -14,6 +14,11 @@ getShootingZones <- function() {
   return(img)  
 }
 
+getShootingZonesGrob <- function() {
+  img <- getShootingZones()
+  return(rasterGrob(img, interpolate=TRUE))
+}
+
 courtImg <- getCourt()
 shootingColorScale <- c("#49FF00FF", "#49FF00FF",  
                         "#FFDB00FF", 
@@ -63,12 +68,44 @@ shotPlot <- function(shots) {
 }
 
 shootingByZoneDataFrame <- function(shots) {
-  shots.agg <- ddply(shots, .(shootingZone), summarize, 
-                     FGA=length(shootingZone),
+  shots.agg <- ddply(shots, .(ShootingZone), summarize, 
+                     FGA=length(ShootingZone),
                      Points=sum(PointsScored),
-                     PPS=mean(PointsScored)
+                     PointsPerShot=mean(PointsScored)
                      )
-  return(merge(shootingZonesDF, shots.agg, by=c("shootingZone"), all = TRUE))
+  return(merge(shootingZonesDF, shots.agg, by=c("ShootingZone"), all = TRUE))
+}
+
+shootingByZonePlot <- function(shootingByZoneDataFrame) {
+  p <- ggplot(shootingByZoneDataFrame, 
+              aes(x, -y,
+                  label=paste(round(PointsPerShot,2),"pps\n",
+                              FGA, "fga"))) +
+    xlim(0,279) + ylim(-200,0) +
+    geom_point(aes(size=FGA,
+                   colour=PointsPerShot)) +
+    annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) +    
+    geom_text(vjust=+1.2) +
+    scale_colour_gradientn(colours = shootingColorScale, limits=c(0.0,3.0)) +
+    coord_fixed() +
+    theme_bw()
+  
+  return(p)  
+}
+
+shootingZoneLegendPlot <- function() {
+  p <- ggplot(shootingZonesDF, 
+              aes(x, -y,
+                  label=ShootingZone)) +
+    xlim(0,279) + ylim(-200,0) +
+    annotation_custom(getShootingZonesGrob(), xmin=-0, xmax=279, ymin=-200, ymax=0) +    
+    annotation_custom(courtImg, xmin=-0, xmax=279, ymin=-200, ymax=0) +    
+    geom_point() +
+    geom_text(size=5, angle=-30, vjust=1.2) +
+    coord_fixed() +
+    theme_bw()
+  
+  return(p)  
 }
 
 shootingHeatMapDataFrame <- function(shots, binSize=10) {

@@ -9,7 +9,6 @@ source("src/shooting/shooting.r")
 # http://flowingdata.com/2012/10/04/more-on-making-heat-maps-in-r/
 
 reportShooting <- function() {
-  pbp <- read.csv("./input/2013-2014/07-play-by-play.csv")
   shots <- getShotsFromPlayByPlay(pbp)
   
   regseasPlyr <- read.csv("output/2013-2014_advanced_player_stats.csv")
@@ -52,7 +51,7 @@ reportShooting <- function() {
   
   byTeam <- split(advancedShots, advancedShots$team_name)  # why not drop=TRUE?
   
-  #  for (team in c("Redwell Gunners Oberwart")) {
+  #for (team in c("Redwell Gunners Oberwart")) {
   for(team in names(byTeam)) {  
     allTeamShots <- byTeam[[team]]
     plot <- shotPlot(allTeamShots)
@@ -69,10 +68,17 @@ reportShooting <- function() {
     byPlayer <- split(allTeamShots, allTeamShots$name, drop=TRUE)
     
     for(player in names(byPlayer)) {
+      
       allPlayerShots <- byPlayer[[player]]
+      
       plot <- shotPlot(allPlayerShots)
-      shootingHeatMap <- shootingHeatMapDataFrame(allPlayerShots)  
       plot(plot + labs(title=paste(player, team, "- All shots")))
+      
+      shootingByZone <- shootingByZoneDataFrame(allPlayerShots)
+      plot(shootingByZonePlot(shootingByZone) + 
+             labs(title=paste(player, team, " - Shooting heat map")))  
+      
+      shootingHeatMap <- shootingHeatMapDataFrame(allPlayerShots)  
       plot(shootingHeatMapPlot(shootingHeatMap) + 
              labs(title=paste(player, team, " - Shooting heat map")))    
     }
