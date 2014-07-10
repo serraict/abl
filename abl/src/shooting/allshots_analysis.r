@@ -8,7 +8,7 @@ source("src/shooting/shooting.r")
 # Kirk Goldsberry (of course)
 # http://flowingdata.com/2012/10/04/more-on-making-heat-maps-in-r/
 
-reportShooting <- function() {
+reportShooting <- function(reportTeamData=TRUE, reportPlayerData=FALSE) {
   pbp <- read.csv("./input/2013-2014/07-play-by-play.csv")
   shots <- getShotsFromPlayByPlay(pbp)
   
@@ -32,12 +32,17 @@ reportShooting <- function() {
   advancedShots <- rbind(shotsHomeWithPlayerData, shotsAwayWithPlayerData)
   
   # competition & by team
-  shootingHeatMap <- shootingHeatMapDataFrame(advancedShots)
-  plot <- shotPlot(advancedShots)
-  
+  plot <- shotPlot(advancedShots)  
   plot(plot + labs(title="All games"))
-  plot(shootingHeatMapPlot(shootingHeatMap) + labs(title="Shooting heat map - all games"))
   
+  shootingByZone <- shootingByZoneDataFrame(advancedShots)
+  plot(shootingByZonePlot(shootingByZone) + 
+         labs(title="Shooting by zone - all games"))  
+  
+  shootingHeatMap <- shootingHeatMapDataFrame(advancedShots)
+  plot(shootingHeatMapPlot(shootingHeatMap) 
+       + labs(title="Shooting heat map - all games"))
+   
   byTeamPlot <- plot + 
     facet_wrap(~team_name) +
     labs(title="Shooting by team")
@@ -48,10 +53,14 @@ reportShooting <- function() {
     labs(title="Opponent shooting by team")
   plot(byOpponentPlot)
   
-  # per team and by player
-  
-  byTeam <- split(advancedShots, advancedShots$team_name)  # why not drop=TRUE?
-  
+  if(reportTeamData) {
+    plotByTeam(advancedShots, reportPlayerData)
+  }
+  return(advancedShots)
+}
+
+plotByTeam <- function(advancedShots, reportPlayerData) {
+  byTeam <- split(advancedShots, advancedShots$team_name)  # why not drop=TRUE?  
   #for (team in c("Redwell Gunners Oberwart")) {
   for(team in names(byTeam)) {  
     allTeamShots <- byTeam[[team]]
@@ -66,24 +75,28 @@ reportShooting <- function() {
       labs(title=paste(team, "Shooting by player"))
     plot(byPlayerPlot)
     
-    byPlayer <- split(allTeamShots, allTeamShots$name, drop=TRUE)
-    
-    for(player in names(byPlayer)) {
-      
-      allPlayerShots <- byPlayer[[player]]
-      
-      plot <- shotPlot(allPlayerShots)
-      plot(plot + labs(title=paste(player, team, "- All shots")))
-      
-      shootingByZone <- shootingByZoneDataFrame(allPlayerShots)
-      plot(shootingByZonePlot(shootingByZone) + 
-             labs(title=paste(player, team, " - Shooting heat map")))  
-      
-      shootingHeatMap <- shootingHeatMapDataFrame(allPlayerShots)  
-      plot(shootingHeatMapPlot(shootingHeatMap) + 
-             labs(title=paste(player, team, " - Shooting heat map")))    
+    if(reportPlayerData) {
+      plotByPlayer(allTeamShots)
     }
   }
+}
+
+plotByPlayer <- function(allTeamShots, reportPlayerData=FALSE) {
+  byPlayer <- split(allTeamShots, allTeamShots$name, drop=TRUE)
   
-  return(advancedShots)
+  for(player in names(byPlayer)) {
+    
+    allPlayerShots <- byPlayer[[player]]
+    
+    plot <- shotPlot(allPlayerShots)
+    plot(plot + labs(title=paste(player, team, "- All shots")))
+    
+    shootingByZone <- shootingByZoneDataFrame(allPlayerShots)
+    plot(shootingByZonePlot(shootingByZone) + 
+           labs(title=paste(player, team, " - Shooting by zone")))  
+    
+    shootingHeatMap <- shootingHeatMapDataFrame(allPlayerShots)  
+    plot(shootingHeatMapPlot(shootingHeatMap) + 
+           labs(title=paste(player, team, " - Shooting heat map")))    
+  }
 }
