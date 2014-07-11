@@ -71,6 +71,8 @@ shotPlot <- function(shots) {
 shootingByZoneDataFrame <- function(shots) {
   shots.agg <- ddply(shots, .(ShootingZone), summarize, 
                      FGA=length(ShootingZone),
+                     FGM=sum(as.numeric(Made==0)),
+                     Ast=sum(assisted),
                      Points=sum(PointsScored),
                      PointsPerShot=mean(PointsScored)
                      )
@@ -81,7 +83,9 @@ shootingByZonePlot <- function(shootingByZoneDataFrame) {
   p <- ggplot(shootingByZoneDataFrame, 
               aes(x, -y,
                   label=paste(round(PointsPerShot,2),"pps\n",
-                              FGA, "fga"))) +
+                              #FGM, "/", FGA, "\n",
+                              round(Ast/FGM, 2), "ast%"
+                              ))) +
     xlim(0,279) + ylim(-200,0) +
     geom_point(aes(size=FGA,
                    colour=PointsPerShot)) +
@@ -185,6 +189,7 @@ getColorByPoints <- function(val) {
 getShotsFromPlayByPlay <- function(pbp) {
   nextPlay <- pbp[-1,c('log_action')]         # skip first row
   assisted <- c((nextPlay=='assist'), FALSE)  # append item to match nr of rows
+  assisted <- as.numeric(assisted)
   pbp$assisted <- assisted
   
   shots <- pbp[(pbp$log_action == 'shot'),]

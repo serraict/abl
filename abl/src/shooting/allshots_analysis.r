@@ -8,18 +8,20 @@ source("src/shooting/shooting.r")
 # Kirk Goldsberry (of course)
 # http://flowingdata.com/2012/10/04/more-on-making-heat-maps-in-r/
 
-reportShooting <- function(reportTeamData=TRUE, reportPlayerData=FALSE) {
-  pbp <- read.csv("./input/2013-2014/07-play-by-play.csv")
+prepareShootingData <- function(pbpFile="./input/2013-2014/07-play-by-play.csv",
+                                statsFile="./output/2013-2014_advanced_player_stats.csv") {
+  pbp <- read.csv(pbpFile)
   shots <- getShotsFromPlayByPlay(pbp)
   
-  regseasPlyr <- read.csv("output/2013-2014_advanced_player_stats.csv")
-  homeGames <- regseasPlyr[(regseasPlyr$home == 1),]
-  awayGames <- regseasPlyr[(regseasPlyr$home == 0),]
+  regseasPlyr <- read.csv(statsFile)
+  cols <- c("game_id", "player_no", "name", "person_id",
+            "team_name", "opp_team_name", "home")
+  homeGames <- regseasPlyr[(regseasPlyr$home == 1), cols]
+  awayGames <- regseasPlyr[(regseasPlyr$home == 0), cols]
   
   shotsHome <- shots[(shots$Team == 1),]
   shotsAway <- shots[(shots$Team == 2),]
   
-  #merge(prettyBoxscore, rawPlayerBoxscore, by=c("game_id", "team_id"))
   shotsHomeWithPlayerData <- merge(homeGames, shotsHome, 
                                    by.x=c("game_id", "player_no"),
                                    by.y=c("game_id", "PlayerShirtNumber"),
@@ -30,7 +32,13 @@ reportShooting <- function(reportTeamData=TRUE, reportPlayerData=FALSE) {
   )  
   
   advancedShots <- rbind(shotsHomeWithPlayerData, shotsAwayWithPlayerData)
-  
+
+  return(advancedShots)
+}
+
+reportShooting <- function(advancedShots, 
+                           reportTeamData=TRUE, reportPlayerData=FALSE) {
+ 
   # competition & by team
   plot <- shotPlot(advancedShots)  
   plot(plot + labs(title="All games"))
@@ -56,7 +64,7 @@ reportShooting <- function(reportTeamData=TRUE, reportPlayerData=FALSE) {
   if(reportTeamData) {
     plotByTeam(advancedShots, reportPlayerData)
   }
-  return(advancedShots)
+  
 }
 
 plotByTeam <- function(advancedShots, reportPlayerData) {
@@ -81,9 +89,10 @@ plotByTeam <- function(advancedShots, reportPlayerData) {
   }
 }
 
-plotByPlayer <- function(allTeamShots, reportPlayerData=FALSE) {
+plotByPlayer <- function(allTeamShots, 
+                         team = "",
+                         reportPlayerData=FALSE) {
   byPlayer <- split(allTeamShots, allTeamShots$name, drop=TRUE)
-  
   for(player in names(byPlayer)) {
     
     allPlayerShots <- byPlayer[[player]]
