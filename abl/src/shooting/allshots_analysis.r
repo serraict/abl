@@ -68,24 +68,39 @@ reportShooting <- function(advancedShots,
 }
 
 plotByTeam <- function(advancedShots, reportPlayerData) {
-  byTeam <- split(advancedShots, advancedShots$team_name)  # why not drop=TRUE?  
-  #for (team in c("Redwell Gunners Oberwart")) {
-  for(team in names(byTeam)) {  
-    allTeamShots <- byTeam[[team]]
-    plot <- shotPlot(allTeamShots)
-    shootingHeatMap <- shootingHeatMapDataFrame(allTeamShots)  
-    plot(plot + labs(title=paste(team, "- All shots")))
-    plot(shootingHeatMapPlot(shootingHeatMap) + 
-           labs(title=paste(team, " - Shooting heat map")))
-    
+  byTeam <- split(advancedShots, advancedShots$team_name)  # why not drop=TRUE?    
+  
+  for(team in names(byTeam)) {    
+    allTeamShots <- byTeam[[team]]    
+    plotTeamShots(allTeamShots, team, reportPlayerData=reportPlayerData)
+  }
+  
+  byOpponent <- split(advancedShots, advancedShots$opp_team_name)   
+  for(team in names(byOpponent)) {    
+    allTeamShots <- byOpponent[[team]]    
+    plotTeamShots(allTeamShots, paste(team, "'s opponents"), reportPlayerData=FALSE)
+  }
+}
+
+plotTeamShots <- function (allTeamShots, titleHeader, reportPlayerData) {
+  plot <- shotPlot(allTeamShots)
+  plot(plot + labs(title=paste(titleHeader, "- All shots")))
+  
+  shootingByZone <- shootingByZoneDataFrame(allTeamShots)
+  plot(shootingByZonePlot(shootingByZone) + 
+         labs(title=paste(titleHeader, " - Shooting by zone"))) 
+  
+  shootingHeatMap <- shootingHeatMapDataFrame(allTeamShots)  
+  plot(shootingHeatMapPlot(shootingHeatMap) + 
+         labs(title=paste(titleHeader, " - Shooting heat map")))
+  
+  if(reportPlayerData) {
     byPlayerPlot <- plot + 
       facet_wrap(~name) +
-      labs(title=paste(team, "Shooting by player"))
+      labs(title=paste(titleHeader, "Shooting by player"))
     plot(byPlayerPlot)
     
-    if(reportPlayerData) {
-      plotByPlayer(allTeamShots)
-    }
+    plotByPlayer(allTeamShots)
   }
 }
 
