@@ -1,0 +1,1 @@
+cp ./output/** ./published/
