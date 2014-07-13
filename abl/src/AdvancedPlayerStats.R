@@ -89,15 +89,20 @@ GetAdvancedPlayerStats <- function(teamStats, player_boxscore) {
                            ply_TSpct = (ply_PTS / (2 * (ply_FG2A + ply_FG3A + ftaFactor * ply_FTA)))
   )
   
+  # finishes
   playerStats <- transform(playerStats,
                            ply_Finishes = (ply_plays + ply_Ast)
   )
   
+  # assist percentage: estimate the percentage of field goals the player assisted
+  # while on the floor
   playerStats <- transform(playerStats,
                            ply_Astpct = (ply_Ast) 
                            / (ply_minuteRatio * (FG2M + FG3M) - ply_FG2M - ply_FG3M)
   )
   
+  # rebound percentages: estimate the percentage of reobunds the player
+  # grabbed while on the floor
   playerStats <- transform(playerStats,
                            ply_TRpct = (ply_DR+ply_OR) / (ply_minuteRatio * (DR + OR + opp_DR + opp_OR)),
                            ply_DRpct = (ply_DR) / (ply_minuteRatio * (DR + opp_OR)),
@@ -115,5 +120,10 @@ GetAdvancedPlayerStats <- function(teamStats, player_boxscore) {
                            / (ply_minuteRatio * (opp_FG2A))
   )
   
+  # OE (offensive effciency)
+  playerStats <- transform(playerStats,
+                           ply_OE = (ply_FG2M + ply_FG3M + ply_Ast) 
+                                    / (ply_FG2A + ply_FG3A + ply_TO + ply_Ast - ply_OR)
+  )
   return (playerStats)
 }
